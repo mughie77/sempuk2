@@ -19,6 +19,12 @@
             echo nav_link('pages/admin_manage_users.php', 'bi-people', 'Kelola Pengguna');
             echo nav_link('pages/admin_manage_siswa.php', 'bi-person-badge', 'Kelola Siswa');
             echo nav_link('pages/admin_manage_guru.php', 'bi-briefcase', 'Kelola Guru');
+            echo nav_link('pages/admin_manage_program.php', 'bi-diagram-3', 'Program Keahlian');
+            echo nav_link('pages/admin_manage_konsentrasi.php', 'bi-star', 'Konsentrasi Keahlian');
+            echo nav_link('pages/admin_manage_kelas.php', 'bi-door-open', 'Kelola Kelas');
+            echo nav_link('pages/admin_manage_mapel.php', 'bi-book', 'Kelola Mapel');
+            echo nav_link('pages/admin_manage_jadwal.php', 'bi-calendar3', 'Kelola Jadwal');
+            echo nav_link('pages/admin_qr_manager.php', 'bi-qr-code-scan', 'QR Presensi');
         }
 
         if ($role == 'Guru') {

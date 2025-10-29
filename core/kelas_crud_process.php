@@ -19,11 +19,12 @@ $action = $_POST['action'];
 
 if ($action === 'add_kelas') {
     $nama_kelas = trim($_POST['nama_kelas']);
-    if (empty($nama_kelas)) redirect_with_message('Nama Kelas tidak boleh kosong.', 'danger');
+    $konsentrasi_id = $_POST['konsentrasi_id'];
+    if (empty($nama_kelas) || empty($konsentrasi_id)) redirect_with_message('Semua field wajib diisi.', 'danger');
 
-    $sql = "INSERT INTO kelas (nama_kelas) VALUES (?)";
+    $sql = "INSERT INTO kelas (nama_kelas, konsentrasi_id) VALUES (?, ?)";
     if ($stmt = $mysqli->prepare($sql)) {
-        $stmt->bind_param("s", $nama_kelas);
+        $stmt->bind_param("si", $nama_kelas, $konsentrasi_id);
         if ($stmt->execute()) {
             redirect_with_message('Kelas baru berhasil ditambahkan.');
         } else {
@@ -37,11 +38,12 @@ if ($action === 'add_kelas') {
 elseif ($action === 'edit_kelas') {
     $kelas_id = $_POST['kelas_id'];
     $nama_kelas = trim($_POST['nama_kelas']);
-    if (empty($kelas_id) || empty($nama_kelas)) redirect_with_message('ID dan Nama Kelas tidak boleh kosong.', 'danger');
+    $konsentrasi_id = $_POST['konsentrasi_id'];
+    if (empty($kelas_id) || empty($nama_kelas) || empty($konsentrasi_id)) redirect_with_message('Semua field tidak boleh kosong.', 'danger');
 
-    $sql = "UPDATE kelas SET nama_kelas = ? WHERE kelas_id = ?";
+    $sql = "UPDATE kelas SET nama_kelas = ?, konsentrasi_id = ? WHERE kelas_id = ?";
     if ($stmt = $mysqli->prepare($sql)) {
-        $stmt->bind_param("si", $nama_kelas, $kelas_id);
+        $stmt->bind_param("sii", $nama_kelas, $konsentrasi_id, $kelas_id);
         if ($stmt->execute()) {
             redirect_with_message('Data kelas berhasil diperbarui.');
         } else {
@@ -69,7 +71,7 @@ elseif ($action === 'delete_kelas') {
 elseif ($action === 'get_kelas_details' && isset($_GET['id'])) {
     header('Content-Type: application/json');
     $kelas_id = $_GET['id'];
-    $sql = "SELECT kelas_id, nama_kelas FROM kelas WHERE kelas_id = ?";
+    $sql = "SELECT kelas_id, nama_kelas, konsentrasi_id FROM kelas WHERE kelas_id = ?";
     if ($stmt = $mysqli->prepare($sql)) {
         $stmt->bind_param("i", $kelas_id);
         $stmt->execute();
