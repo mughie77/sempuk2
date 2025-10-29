@@ -20,7 +20,7 @@ $action = $_POST['action'];
 if ($action === 'add_konsentrasi') {
     $program_id = $_POST['program_id'];
     $nama_konsentrasi = trim($_POST['nama_konsentrasi']);
-    if (empty($program_id) || empty($nama_konsentrasi)) redirect_with_message('Semua field wajib diisi.', 'danger');
+    if (!isset($program_id) || $nama_konsentrasi === '') redirect_with_message('Semua field wajib diisi.', 'danger');
 
     $sql = "INSERT INTO konsentrasi_keahlian (program_id, nama_konsentrasi) VALUES (?, ?)";
     if ($stmt = $mysqli->prepare($sql)) {
@@ -39,7 +39,7 @@ elseif ($action === 'edit_konsentrasi') {
     $konsentrasi_id = $_POST['konsentrasi_id'];
     $program_id = $_POST['program_id'];
     $nama_konsentrasi = trim($_POST['nama_konsentrasi']);
-    if (empty($konsentrasi_id) || empty($program_id) || empty($nama_konsentrasi)) redirect_with_message('Semua field tidak boleh kosong.', 'danger');
+    if (!isset($konsentrasi_id) || !isset($program_id) || $nama_konsentrasi === '') redirect_with_message('Semua field tidak boleh kosong.', 'danger');
 
     $sql = "UPDATE konsentrasi_keahlian SET program_id = ?, nama_konsentrasi = ? WHERE konsentrasi_id = ?";
     if ($stmt = $mysqli->prepare($sql)) {
