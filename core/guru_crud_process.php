@@ -27,16 +27,51 @@ if ($action === 'add_guru') {
         redirect_with_message('NIP dan Nama Lengkap wajib diisi.', 'danger');
     }
 
-    $sql = "INSERT INTO guru (nip, nama_lengkap, alamat, telepon) VALUES (?, ?, ?, ?)";
-    if ($stmt = $mysqli->prepare($sql)) {
-        $stmt->bind_param("ssss", $nip, $nama_lengkap, $alamat, $telepon);
-        if ($stmt->execute()) {
-            redirect_with_message('Data guru baru berhasil ditambahkan.');
-        } else {
-            if ($mysqli->errno === 1062) redirect_with_message('NIP sudah terdaftar.', 'danger');
-            redirect_with_message('Gagal menambahkan data guru: ' . $stmt->error, 'danger');
+    // Mulai transaksi
+    $mysqli->begin_transaction();
+
+    try {
+        // 1. Buat akun di tabel 'users'
+        $username = $nip;
+        $password = $nip; // Password awal sama dengan NIP
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $role = 'Guru'; // Peran default bisa 'Guru' atau 'GuruMapel', sesuaikan
+
+        $sql_user = "INSERT INTO users (username, password, role, nama_lengkap) VALUES (?, ?, ?, ?)";
+        $stmt_user = $mysqli->prepare($sql_user);
+        $stmt_user->bind_param("ssss", $username, $hashed_password, $role, $nama_lengkap);
+
+        if (!$stmt_user->execute()) {
+            if ($mysqli->errno === 1062) {
+                throw new Exception('Gagal membuat akun: Username (NIP) sudah digunakan.');
+            }
+            throw new Exception('Gagal membuat akun pengguna: ' . $stmt_user->error);
         }
-        $stmt->close();
+
+        $user_id = $stmt_user->insert_id;
+        $stmt_user->close();
+
+        // 2. Buat data di tabel 'guru'
+        $sql_guru = "INSERT INTO guru (user_id, nip, nama_lengkap, alamat, telepon) VALUES (?, ?, ?, ?, ?)";
+        $stmt_guru = $mysqli->prepare($sql_guru);
+        $stmt_guru->bind_param("issss", $user_id, $nip, $nama_lengkap, $alamat, $telepon);
+
+        if (!$stmt_guru->execute()) {
+            if ($mysqli->errno === 1062) {
+                 throw new Exception('Gagal menyimpan data: NIP sudah terdaftar.');
+            }
+            throw new Exception('Gagal menyimpan data guru: ' . $stmt_guru->error);
+        }
+        $stmt_guru->close();
+
+        // Commit transaksi
+        $mysqli->commit();
+        redirect_with_message('Data guru baru dan akun login berhasil dibuat.');
+
+    } catch (Exception $e) {
+        // Rollback jika ada error
+        $mysqli->rollback();
+        redirect_with_message($e->getMessage(), 'danger');
     }
 }
 

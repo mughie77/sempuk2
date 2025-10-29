@@ -25,25 +25,57 @@ if ($action === 'add_siswa') {
     $nama_lengkap = trim($_POST['nama_lengkap']);
     $alamat = trim($_POST['alamat']);
     $telepon = trim($_POST['telepon']);
-    // $kelas_id = $_POST['kelas_id']; // Akan ditambahkan nanti
-    // $user_id = $_POST['user_id']; // Akan ditambahkan nanti
 
     if (empty($nis) || empty($nama_lengkap)) {
         redirect_with_message('NIS dan Nama Lengkap wajib diisi.', 'danger');
     }
 
-    $sql = "INSERT INTO siswa (nis, nama_lengkap, alamat, telepon) VALUES (?, ?, ?, ?)";
-    if ($stmt = $mysqli->prepare($sql)) {
-        $stmt->bind_param("ssss", $nis, $nama_lengkap, $alamat, $telepon);
-        if ($stmt->execute()) {
-            redirect_with_message('Data siswa baru berhasil ditambahkan.');
-        } else {
+    // Mulai transaksi
+    $mysqli->begin_transaction();
+
+    try {
+        // 1. Buat akun di tabel 'users'
+        $username = $nis;
+        $password = $nis; // Password awal sama dengan NIS
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $role = 'Siswa';
+
+        $sql_user = "INSERT INTO users (username, password, role, nama_lengkap) VALUES (?, ?, ?, ?)";
+        $stmt_user = $mysqli->prepare($sql_user);
+        $stmt_user->bind_param("ssss", $username, $hashed_password, $role, $nama_lengkap);
+
+        if (!$stmt_user->execute()) {
+            // Cek jika username (NIS) sudah ada
             if ($mysqli->errno === 1062) {
-                redirect_with_message('NIS sudah terdaftar.', 'danger');
+                throw new Exception('Gagal membuat akun: Username (NIS) sudah digunakan.');
             }
-            redirect_with_message('Gagal menambahkan data siswa: ' . $stmt->error, 'danger');
+            throw new Exception('Gagal membuat akun pengguna: ' . $stmt_user->error);
         }
-        $stmt->close();
+
+        $user_id = $stmt_user->insert_id;
+        $stmt_user->close();
+
+        // 2. Buat data di tabel 'siswa'
+        $sql_siswa = "INSERT INTO siswa (user_id, nis, nama_lengkap, alamat, telepon) VALUES (?, ?, ?, ?, ?)";
+        $stmt_siswa = $mysqli->prepare($sql_siswa);
+        $stmt_siswa->bind_param("issss", $user_id, $nis, $nama_lengkap, $alamat, $telepon);
+
+        if (!$stmt_siswa->execute()) {
+            if ($mysqli->errno === 1062) {
+                 throw new Exception('Gagal menyimpan data: NIS sudah terdaftar.');
+            }
+            throw new Exception('Gagal menyimpan data siswa: ' . $stmt_siswa->error);
+        }
+        $stmt_siswa->close();
+
+        // Jika semua berhasil, commit transaksi
+        $mysqli->commit();
+        redirect_with_message('Data siswa baru dan akun login berhasil dibuat.');
+
+    } catch (Exception $e) {
+        // Jika ada error, rollback transaksi
+        $mysqli->rollback();
+        redirect_with_message($e->getMessage(), 'danger');
     }
 }
 
