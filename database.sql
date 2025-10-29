@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 28, 2025 at 09:30 PM
+-- Generation Time: Oct 28, 2025 at 10:30 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -42,12 +42,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `username`, `password`, `role`, `nama_lengkap`, `token_sesi_aktif`, `created_at`) VALUES
-(1, 'admin', '$2y$10$examplehashedpassword1', 'Administrator', 'Admin Utama', NULL, '2025-10-28 19:15:11'),
-(2, 'guru.mapel', '$2y$10$examplehashedpassword2', 'Guru', 'Budi Santoso, S.Pd.', NULL, '2025-10-28 19:15:11'),
-(3, 'siswa.contoh', '$2y$10$examplehashedpassword3', 'Siswa', 'Ani Yudhoyono', NULL, '2025-10-28 19:15:11'),
-(4, 'ortu.contoh', '$2y$10$examplehashedpassword4', 'Orang Tua', 'Bapak Ani', NULL, '2025-10-28 19:15:11'),
-(5, 'petugas.tabungan', '$2y$10$examplehashedpassword5', 'Petugas Tabungan', 'Citra Lestari', NULL, '2025-10-28 19:15:11'),
-(6, 'guru.bk', '$2y$10$examplehashedpassword6', 'BK', 'Dewi Anggraini, S.Psi.', NULL, '2025-10-28 19:15:11');
+(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrator', 'Admin Utama', NULL, '2025-10-28 19:15:11'),
+(2, 'guru.mapel', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Guru', 'Budi Santoso, S.Pd.', NULL, '2025-10-28 19:15:11'),
+(3, 'siswa.contoh', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Siswa', 'Ani Yudhoyono', NULL, '2025-10-28 19:15:11');
 
 -- --------------------------------------------------------
 
@@ -57,7 +54,7 @@ INSERT INTO `users` (`user_id`, `username`, `password`, `role`, `nama_lengkap`, 
 
 CREATE TABLE `siswa` (
   `siswa_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
   `nis` varchar(20) NOT NULL,
   `nama_lengkap` varchar(100) NOT NULL,
   `kelas_id` int(11) DEFAULT NULL,
@@ -74,12 +71,64 @@ CREATE TABLE `siswa` (
 
 CREATE TABLE `guru` (
   `guru_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
   `nip` varchar(30) NOT NULL,
   `nama_lengkap` varchar(100) NOT NULL,
   `alamat` text DEFAULT NULL,
   `telepon` varchar(20) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `kelas`
+--
+
+CREATE TABLE `kelas` (
+  `kelas_id` int(11) NOT NULL,
+  `nama_kelas` varchar(50) NOT NULL,
+  `wali_kelas_id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `mapel`
+--
+
+CREATE TABLE `mapel` (
+  `mapel_id` int(11) NOT NULL,
+  `nama_mapel` varchar(100) NOT NULL,
+  `deskripsi` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `jadwal_pelajaran`
+--
+
+CREATE TABLE `jadwal_pelajaran` (
+  `jadwal_id` int(11) NOT NULL,
+  `kelas_id` int(11) NOT NULL,
+  `mapel_id` int(11) NOT NULL,
+  `guru_id` int(11) NOT NULL,
+  `hari` enum('Senin','Selasa','Rabu','Kamis','Jumat','Sabtu') NOT NULL,
+  `jam_mulai` time NOT NULL,
+  `jam_selesai` time NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `qr_harian`
+--
+
+CREATE TABLE `qr_harian` (
+  `qr_id` int(11) NOT NULL,
+  `tanggal` date NOT NULL,
+  `token` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -162,151 +211,51 @@ CREATE TABLE `jurnal_harian` (
 -- Indexes for dumped tables
 --
 
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`user_id`),
-  ADD UNIQUE KEY `username` (`username`);
-
---
--- Indexes for table `siswa`
---
-ALTER TABLE `siswa`
-  ADD PRIMARY KEY (`siswa_id`),
-  ADD UNIQUE KEY `nis` (`nis`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- Indexes for table `guru`
---
-ALTER TABLE `guru`
-  ADD PRIMARY KEY (`guru_id`),
-  ADD UNIQUE KEY `nip` (`nip`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- Indexes for table `bk_laporan_mood`
---
-ALTER TABLE `bk_laporan_mood`
-  ADD PRIMARY KEY (`laporan_id`),
-  ADD KEY `siswa_id` (`siswa_id`);
-
---
--- Indexes for table `tabungan_saldo`
---
-ALTER TABLE `tabungan_saldo`
-  ADD PRIMARY KEY (`saldo_id`),
-  ADD UNIQUE KEY `siswa_id` (`siswa_id`);
-
---
--- Indexes for table `tabungan_transaksi`
---
-ALTER TABLE `tabungan_transaksi`
-  ADD PRIMARY KEY (`transaksi_id`),
-  ADD KEY `siswa_id` (`siswa_id`),
-  ADD KEY `petugas_user_id` (`petugas_user_id`);
-
---
--- Indexes for table `presensi_log_harian`
---
-ALTER TABLE `presensi_log_harian`
-  ADD PRIMARY KEY (`log_id`),
-  ADD KEY `siswa_id` (`siswa_id`);
-
---
--- Indexes for table `jurnal_harian`
---
-ALTER TABLE `jurnal_harian`
-  ADD PRIMARY KEY (`jurnal_id`),
-  ADD KEY `guru_id` (`guru_id`);
+ALTER TABLE `users` ADD PRIMARY KEY (`user_id`), ADD UNIQUE KEY `username` (`username`);
+ALTER TABLE `siswa` ADD PRIMARY KEY (`siswa_id`), ADD UNIQUE KEY `nis` (`nis`), ADD KEY `user_id` (`user_id`), ADD KEY `kelas_id` (`kelas_id`);
+ALTER TABLE `guru` ADD PRIMARY KEY (`guru_id`), ADD UNIQUE KEY `nip` (`nip`), ADD KEY `user_id` (`user_id`);
+ALTER TABLE `kelas` ADD PRIMARY KEY (`kelas_id`), ADD UNIQUE KEY `nama_kelas` (`nama_kelas`), ADD KEY `wali_kelas_id` (`wali_kelas_id`);
+ALTER TABLE `mapel` ADD PRIMARY KEY (`mapel_id`), ADD UNIQUE KEY `nama_mapel` (`nama_mapel`);
+ALTER TABLE `jadwal_pelajaran` ADD PRIMARY KEY (`jadwal_id`), ADD KEY `kelas_id` (`kelas_id`), ADD KEY `mapel_id` (`mapel_id`), ADD KEY `guru_id` (`guru_id`);
+ALTER TABLE `qr_harian` ADD PRIMARY KEY (`qr_id`), ADD UNIQUE KEY `tanggal` (`tanggal`);
+ALTER TABLE `bk_laporan_mood` ADD PRIMARY KEY (`laporan_id`), ADD KEY `siswa_id` (`siswa_id`);
+ALTER TABLE `tabungan_saldo` ADD PRIMARY KEY (`saldo_id`), ADD UNIQUE KEY `siswa_id` (`siswa_id`);
+ALTER TABLE `tabungan_transaksi` ADD PRIMARY KEY (`transaksi_id`), ADD KEY `siswa_id` (`siswa_id`), ADD KEY `petugas_user_id` (`petugas_user_id`);
+ALTER TABLE `presensi_log_harian` ADD PRIMARY KEY (`log_id`), ADD KEY `siswa_id` (`siswa_id`);
+ALTER TABLE `jurnal_harian` ADD PRIMARY KEY (`jurnal_id`), ADD KEY `guru_id` (`guru_id`), ADD KEY `mapel_id` (`mapel_id`), ADD KEY `kelas_id` (`kelas_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
 
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT for table `siswa`
---
-ALTER TABLE `siswa`
-  MODIFY `siswa_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `guru`
---
-ALTER TABLE `guru`
-  MODIFY `guru_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `bk_laporan_mood`
---
-ALTER TABLE `bk_laporan_mood`
-  MODIFY `laporan_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tabungan_saldo`
---
-ALTER TABLE `tabungan_saldo`
-  MODIFY `saldo_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tabungan_transaksi`
---
-ALTER TABLE `tabungan_transaksi`
-  MODIFY `transaksi_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `presensi_log_harian`
---
-ALTER TABLE `presensi_log_harian`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `jurnal_harian`
---
-ALTER TABLE `jurnal_harian`
-  MODIFY `jurnal_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `users` MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+ALTER TABLE `siswa` MODIFY `siswa_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `guru` MODIFY `guru_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `kelas` MODIFY `kelas_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `mapel` MODIFY `mapel_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `jadwal_pelajaran` MODIFY `jadwal_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `qr_harian` MODIFY `qr_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `bk_laporan_mood` MODIFY `laporan_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `tabungan_saldo` MODIFY `saldo_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `tabungan_transaksi` MODIFY `transaksi_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `presensi_log_harian` MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `jurnal_harian` MODIFY `jurnal_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
 --
 
---
--- Constraints for table `siswa`
---
 ALTER TABLE `siswa`
-  ADD CONSTRAINT `siswa_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `guru`
---
+  ADD CONSTRAINT `siswa_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `siswa_ibfk_2` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE SET NULL;
 ALTER TABLE `guru`
-  ADD CONSTRAINT `guru_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `bk_laporan_mood`
---
-ALTER TABLE `bk_laporan_mood`
-  ADD CONSTRAINT `bk_laporan_mood_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `tabungan_saldo`
---
-ALTER TABLE `tabungan_saldo`
-  ADD CONSTRAINT `tabungan_saldo_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `tabungan_transaksi`
---
-ALTER TABLE `tabungan_transaksi`
-  ADD CONSTRAINT `tabungan_transaksi_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `tabungan_transaksi_ibfk_2` FOREIGN KEY (`petugas_user_id`) REFERENCES `users` (`user_id`);
+  ADD CONSTRAINT `guru_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+ALTER TABLE `kelas`
+  ADD CONSTRAINT `kelas_ibfk_1` FOREIGN KEY (`wali_kelas_id`) REFERENCES `guru` (`guru_id`) ON DELETE SET NULL;
+ALTER TABLE `jadwal_pelajaran`
+  ADD CONSTRAINT `jadwal_pelajaran_ibfk_1` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `jadwal_pelajaran_ibfk_2` FOREIGN KEY (`mapel_id`) REFERENCES `mapel` (`mapel_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `jadwal_pelajaran_ibfk_3` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`guru_id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

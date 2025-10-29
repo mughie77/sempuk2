@@ -1,0 +1,138 @@
+<?php
+// /pages/admin_manage_kelas.php
+
+require_once __DIR__ . '/../core/auth_check.php';
+require_role(['Administrator']);
+require_once __DIR__ . '/../core/db_connect.php';
+
+$classes = [];
+$sql = "SELECT kelas_id, nama_kelas FROM kelas ORDER BY nama_kelas ASC";
+if ($result = $mysqli->query($sql)) {
+    $classes = $result->fetch_all(MYSQLI_ASSOC);
+    $result->free();
+}
+
+include __DIR__ . '/../includes/header.php';
+include __DIR__ . '/../includes/sidebar.php';
+include __DIR__ . '/../includes/topbar.php';
+?>
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Manajemen Data Kelas</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="<?php echo BASE_URL; ?>dashboard.php">Dashboard</a></li>
+        <li class="breadcrumb-item active">Manajemen Kelas</li>
+    </ol>
+
+    <?php if (isset($_SESSION['flash_message'])): ?>
+    <div class="alert alert-<?php echo $_SESSION['flash_message']['type']; ?> alert-dismissible fade show" role="alert">
+        <?php echo $_SESSION['flash_message']['message']; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php unset($_SESSION['flash_message']); endif; ?>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-door-open me-1"></i>Data Kelas</span>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addKelasModal">
+                <i class="bi bi-plus-circle me-1"></i> Tambah Kelas Baru
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Kelas</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($classes)): ?>
+                            <tr><td colspan="3" class="text-center">Belum ada data kelas.</td></tr>
+                        <?php else: ?>
+                            <?php $i = 1; foreach ($classes as $class): ?>
+                                <tr>
+                                    <td><?php echo $i++; ?></td>
+                                    <td><?php echo htmlspecialchars($class['nama_kelas']); ?></td>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editKelasModal" data-id="<?php echo $class['kelas_id']; ?>"><i class="bi bi-pencil-square"></i></button>
+                                        <form action="<?php echo BASE_URL; ?>core/kelas_crud_process.php" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus kelas ini?');">
+                                            <input type="hidden" name="action" value="delete_kelas">
+                                            <input type="hidden" name="kelas_id" value="<?php echo $class['kelas_id']; ?>">
+                                            <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tambah Kelas -->
+<div class="modal fade" id="addKelasModal" tabindex="-1" aria-labelledby="addKelasModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="addKelasModalLabel">Tambah Kelas Baru</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form action="<?php echo BASE_URL; ?>core/kelas_crud_process.php" method="POST">
+        <div class="modal-body">
+          <input type="hidden" name="action" value="add_kelas">
+          <div class="mb-3">
+            <label for="add-nama_kelas" class="form-label">Nama Kelas</label>
+            <input type="text" class="form-control" id="add-nama_kelas" name="nama_kelas" required>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary">Simpan</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Edit Kelas -->
+<div class="modal fade" id="editKelasModal" tabindex="-1" aria-labelledby="editKelasModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="editKelasModalLabel">Edit Data Kelas</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form action="<?php echo BASE_URL; ?>core/kelas_crud_process.php" method="POST">
+        <div class="modal-body">
+          <input type="hidden" name="action" value="edit_kelas">
+          <input type="hidden" name="kelas_id" id="edit-kelas_id">
+          <div class="mb-3">
+            <label for="edit-nama_kelas" class="form-label">Nama Kelas</label>
+            <input type="text" class="form-control" id="edit-nama_kelas" name="nama_kelas" required>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary">Simpan Perubahan</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<?php
+include __DIR__ . '/../includes/footer.php';
+$mysqli->close();
+?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const editKelasModal = document.getElementById('editKelasModal');
+    editKelasModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const kelasId = button.getAttribute('data-id');
+        const url = `<?php echo BASE_URL; ?>core/kelas_crud_process.php?action=get_kelas_details&id=${kelasId}`;
+
+        fetch(url).then(res => res.json()).then(data => {
+            if(data.error) { alert(data.error); }
+            else {
+                editKelasModal.querySelector('#edit-kelas_id').value = data.kelas_id;
+                editKelasModal.querySelector('#edit-nama_kelas').value = data.nama_kelas;
+            }
+        });
+    });
+});
+</script>

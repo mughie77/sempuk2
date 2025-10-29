@@ -44,7 +44,7 @@ include __DIR__ . '/includes/topbar.php';
                     <div class="card-body">
                         <h5 class="card-title"><i class="bi bi-person-badge me-2"></i>Data Siswa</h5>
                         <p class="card-text">Lihat dan kelola data induk siswa.</p>
-                         <a href="#" class="stretched-link"></a>
+                         <a href="<?php echo BASE_URL; ?>pages/admin_manage_siswa.php" class="stretched-link"></a>
                     </div>
                 </div>
             </div>';
