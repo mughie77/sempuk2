@@ -1,13 +1,11 @@
 <?php
 // /core/login_process.php
 
-// 1. Mulai Session
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// 1. Sertakan file inisialisasi (mulai session dan muat config)
+require_once __DIR__ . '/init.php';
 
 // 2. Sertakan file koneksi database
-require_once 'db_connect.php';
+require_once __DIR__ . '/db_connect.php';
 
 // 3. Pastikan request adalah POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -63,18 +61,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         }
 
                         // Arahkan ke dashboard
-                        header("location: /dashboard.php");
+                        header("Location: " . BASE_URL . "dashboard.php");
                         exit();
 
                     } else {
                         // Password salah
-                        header("location: /login.php?error=invalid");
+                        header("Location: " . BASE_URL . "login.php?error=invalid");
                         exit();
                     }
                 }
             } else {
                 // Username tidak ditemukan
-                header("location: /login.php?error=invalid");
+                header("Location: " . BASE_URL . "login.php?error=invalid");
                 exit();
             }
         } else {
@@ -88,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $mysqli->close();
 } else {
     // Jika bukan POST, arahkan ke halaman login
-    header("location: /login.php");
+    header("Location: " . BASE_URL . "login.php");
     exit();
 }
 ?>

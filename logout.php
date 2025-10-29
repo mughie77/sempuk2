@@ -1,10 +1,8 @@
 <?php
 // /logout.php
 
-// 1. Selalu mulai session untuk mengaksesnya
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// Sertakan file inisialisasi untuk memulai session dan memuat config
+require_once __DIR__ . '/core/init.php';
 
 // 2. Hapus semua variabel session
 $_SESSION = array();
@@ -12,7 +10,7 @@ $_SESSION = array();
 // 3. Hancurkan session
 if (session_destroy()) {
     // 4. Arahkan ke halaman login setelah logout berhasil
-    header("Location: /login.php");
+    header("Location: " . BASE_URL . "login.php");
     exit();
 } else {
     // Jika ada masalah saat menghancurkan sesi

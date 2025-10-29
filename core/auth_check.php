@@ -1,10 +1,8 @@
 <?php
 // /core/auth_check.php
 
-// 1. Mulai atau lanjutkan sesi yang ada
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// 1. Sertakan file inisialisasi (mulai session dan muat config)
+require_once __DIR__ . '/init.php';
 
 // 2. Sertakan koneksi database
 require_once __DIR__ . '/db_connect.php';
@@ -12,7 +10,7 @@ require_once __DIR__ . '/db_connect.php';
 // 3. Cek apakah pengguna sudah login
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['token_sesi'])) {
     // Jika tidak, arahkan ke halaman login dengan pesan error
-    header("Location: /login.php?error=denied");
+    header("Location: " . BASE_URL . "login.php?error=denied");
     exit();
 }
 
@@ -36,14 +34,14 @@ if ($stmt = $mysqli->prepare($sql)) {
         session_destroy();
 
         // Arahkan ke halaman login dengan pesan error multilogin
-        header("Location: /login.php?error=multilogin");
+        header("Location: " . BASE_URL . "login.php?error=multilogin");
         exit();
     }
 } else {
     // Gagal menyiapkan query, hancurkan sesi sebagai tindakan pengamanan
     session_unset();
     session_destroy();
-    header("Location: /login.php?error=denied");
+    header("Location: " . BASE_URL . "login.php?error=denied");
     exit();
 }
 
@@ -77,7 +75,7 @@ function require_role(array $allowed_roles) {
         echo '      <p>Anda tidak memiliki izin untuk mengakses halaman ini. Peran Anda adalah <strong>' . htmlspecialchars($current_role) . '</strong>, ';
         echo '      sedangkan halaman ini hanya bisa diakses oleh: <strong>' . htmlspecialchars(implode(', ', $allowed_roles)) . '</strong>.</p>';
         echo '  </div>';
-        echo '  <a href="/dashboard.php" class="btn btn-primary">Kembali ke Dashboard</a>';
+        echo '  <a href="' . BASE_URL . 'dashboard.php" class="btn btn-primary">Kembali ke Dashboard</a>';
         echo '</div>';
         include(__DIR__ . '/../includes/footer.php');
         exit(); // Hentikan eksekusi skrip

@@ -35,7 +35,7 @@ include __DIR__ . '/includes/topbar.php';
                     <div class="card-body">
                         <h5 class="card-title"><i class="bi bi-people me-2"></i>Kelola Pengguna</h5>
                         <p class="card-text">Atur akun dan peran pengguna.</p>
-                        <a href="/pages/admin_manage_users.php" class="stretched-link"></a>
+                        <a href="<?php echo BASE_URL; ?>pages/admin_manage_users.php" class="stretched-link"></a>
                     </div>
                 </div>
             </div>
@@ -56,7 +56,7 @@ include __DIR__ . '/includes/topbar.php';
                     <div class="card-body">
                         <h5 class="card-title"><i class="bi bi-journal-text me-2"></i>Isi Jurnal Mengajar</h5>
                         <p class="card-text">Lengkapi jurnal harian kelas Anda.</p>
-                        <a href="/pages/guru_isi_jurnal.php" class="stretched-link"></a>
+                        <a href="<?php echo BASE_URL; ?>pages/guru_isi_jurnal.php" class="stretched-link"></a>
                     </div>
                 </div>
             </div>';
@@ -68,7 +68,7 @@ include __DIR__ . '/includes/topbar.php';
                     <div class="card-body">
                         <h5 class="card-title"><i class="bi bi-qr-code-scan me-2"></i>Presensi Hari Ini</h5>
                         <p class="card-text">Lakukan presensi dengan scan QR.</p>
-                        <a href="/pages/siswa_presensi.php" class="stretched-link"></a>
+                        <a href="<?php echo BASE_URL; ?>pages/siswa_presensi.php" class="stretched-link"></a>
                     </div>
                 </div>
             </div>
@@ -77,7 +77,7 @@ include __DIR__ . '/includes/topbar.php';
                     <div class="card-body">
                         <h5 class="card-title"><i class="bi bi-cash-coin me-2"></i>Saldo Tabungan</h5>
                         <p class="card-text">Cek saldo dan riwayat transaksi.</p>
-                        <a href="/pages/siswa_cek_tabungan.php" class="stretched-link"></a>
+                        <a href="<?php echo BASE_URL; ?>pages/siswa_cek_tabungan.php" class="stretched-link"></a>
                     </div>
                 </div>
             </div>';

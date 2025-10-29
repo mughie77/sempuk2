@@ -1,13 +1,11 @@
 <?php
-// Di setiap halaman yang memerlukan otentikasi, panggil session_start()
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// File init.php akan menangani session dan konfigurasi dasar
+require_once __DIR__ . '/../core/init.php';
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-ag">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SEMPU - Sekolah Mandiri terPadU</title>
 
@@ -23,7 +21,7 @@ if (session_status() == PHP_SESSION_NONE) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <!-- Custom Elegant CSS -->
-    <link rel="stylesheet" href="/assets/css/elegant.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/elegant.css">
 </head>
 <body class="bg-light">
 

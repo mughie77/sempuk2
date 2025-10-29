@@ -1,12 +1,10 @@
 <?php
 // /login.php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/core/init.php';
 
 // Jika pengguna sudah login, langsung arahkan ke dashboard
 if (isset($_SESSION['user_id'])) {
-    header("Location: /dashboard.php");
+    header("Location: " . BASE_URL . "dashboard.php");
     exit();
 }
 
@@ -88,7 +86,7 @@ if ($error === 'invalid') {
             </div>
             <div class="card-body p-5">
                 <?php echo $message; ?>
-                <form action="/core/login_process.php" method="POST">
+                <form action="<?php echo BASE_URL; ?>core/login_process.php" method="POST">
                     <div class="mb-4">
                         <label for="username" class="form-label">Username</label>
                         <div class="input-group">
