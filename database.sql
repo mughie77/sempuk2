@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 29, 2025 at 12:00 AM
+-- Generation Time: Oct 29, 2025 at 12:25 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -98,7 +98,9 @@ CREATE TABLE `qr_harian` (
   `token` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- (Sisanya dari tabel lain yang sudah ada sebelumnya)
+--
+-- Indexes for dumped tables
+--
 
 ALTER TABLE `users` ADD PRIMARY KEY (`user_id`), ADD UNIQUE KEY `username` (`username`);
 ALTER TABLE `program_keahlian` ADD PRIMARY KEY (`program_id`), ADD UNIQUE KEY `nama_program` (`nama_program`);
@@ -110,6 +112,10 @@ ALTER TABLE `mapel` ADD PRIMARY KEY (`mapel_id`), ADD UNIQUE KEY `nama_mapel` (`
 ALTER TABLE `jadwal_pelajaran` ADD PRIMARY KEY (`jadwal_id`), ADD KEY `kelas_id` (`kelas_id`), ADD KEY `mapel_id` (`mapel_id`), ADD KEY `guru_id` (`guru_id`);
 ALTER TABLE `qr_harian` ADD PRIMARY KEY (`qr_id`), ADD UNIQUE KEY `tanggal` (`tanggal`);
 
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
 ALTER TABLE `users` MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 ALTER TABLE `program_keahlian` MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `konsentrasi_keahlian` MODIFY `konsentrasi_id` int(11) NOT NULL AUTO_INCREMENT;
@@ -120,11 +126,15 @@ ALTER TABLE `mapel` MODIFY `mapel_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `jadwal_pelajaran` MODIFY `jadwal_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `qr_harian` MODIFY `qr_id` int(11) NOT NULL AUTO_INCREMENT;
 
-ALTER TABLE `konsentrasi_keahlian` ADD CONSTRAINT `konsentrasi_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `program_keahlian` (`program_id`) ON DELETE CASCADE;
-ALTER TABLE `kelas` ADD CONSTRAINT `kelas_ibfk_1` FOREIGN KEY (`wali_kelas_id`) REFERENCES `guru` (`guru_id`) ON DELETE SET NULL, ADD CONSTRAINT `kelas_ibfk_2` FOREIGN KEY (`konsentrasi_id`) REFERENCES `konsentrasi_keahlian` (`konsentrasi_id`) ON DELETE SET NULL;
-ALTER TABLE `siswa` ADD CONSTRAINT `siswa_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL, ADD CONSTRAINT `siswa_ibfk_2` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE SET NULL;
-ALTER TABLE `guru` ADD CONSTRAINT `guru_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
-ALTER TABLE `jadwal_pelajaran` ADD CONSTRAINT `jadwal_ibfk_1` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE CASCADE, ADD CONSTRAINT `jadwal_ibfk_2` FOREIGN KEY (`mapel_id`) REFERENCES `mapel` (`mapel_id`) ON DELETE CASCADE, ADD CONSTRAINT `jadwal_ibfk_3` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`guru_id`) ON DELETE CASCADE;
+--
+-- Constraints for dumped tables
+--
+
+ALTER TABLE `konsentrasi_keahlian` ADD CONSTRAINT `fk_program` FOREIGN KEY (`program_id`) REFERENCES `program_keahlian` (`program_id`) ON DELETE CASCADE;
+ALTER TABLE `kelas` ADD CONSTRAINT `fk_wali_kelas` FOREIGN KEY (`wali_kelas_id`) REFERENCES `guru` (`guru_id`) ON DELETE SET NULL, ADD CONSTRAINT `fk_konsentrasi` FOREIGN KEY (`konsentrasi_id`) REFERENCES `konsentrasi_keahlian` (`konsentrasi_id`) ON DELETE SET NULL;
+ALTER TABLE `siswa` ADD CONSTRAINT `fk_user_siswa` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL, ADD CONSTRAINT `fk_kelas_siswa` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE SET NULL;
+ALTER TABLE `guru` ADD CONSTRAINT `fk_user_guru` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+ALTER TABLE `jadwal_pelajaran` ADD CONSTRAINT `fk_kelas_jadwal` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE CASCADE, ADD CONSTRAINT `fk_mapel_jadwal` FOREIGN KEY (`mapel_id`) REFERENCES `mapel` (`mapel_id`) ON DELETE CASCADE, ADD CONSTRAINT `fk_guru_jadwal` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`guru_id`) ON DELETE CASCADE;
 
 COMMIT;
 

@@ -4,7 +4,7 @@
 require_once __DIR__ . '/../core/auth_check.php';
 require_role(['Administrator']);
 require_once __DIR__ . '/../core/db_connect.php';
-require_once __DIR__ . '/../includes/lib/qrlib.php';
+require_once __DIR__ . '/../includes/lib/phpqrcode/qrlib.php';
 
 $today = date('Y-m-d');
 $qr_token = null;
