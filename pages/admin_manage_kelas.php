@@ -65,11 +65,12 @@ include __DIR__ . '/../includes/topbar.php';
                                     <td><?php echo htmlspecialchars($class['nama_kelas']); ?></td>
                                     <td><?php echo htmlspecialchars($class['nama_konsentrasi'] ?? 'N/A'); ?></td>
                                     <td>
-                                        <button class="btn btn-warning btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editKelasModal" data-id="<?php echo $class['kelas_id']; ?>"><i class="bi bi-pencil-square"></i></button>
+                                        <a href="<?php echo BASE_URL; ?>pages/admin_kelas_detail.php?id=<?php echo $class['kelas_id']; ?>" class="btn btn-info btn-sm" title="Kelola Siswa"><i class="bi bi-people"></i></a>
+                                        <button class="btn btn-warning btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editKelasModal" data-id="<?php echo $class['kelas_id']; ?>" title="Edit Kelas"><i class="bi bi-pencil-square"></i></button>
                                         <form action="<?php echo BASE_URL; ?>core/kelas_crud_process.php" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus kelas ini?');">
                                             <input type="hidden" name="action" value="delete_kelas">
                                             <input type="hidden" name="kelas_id" value="<?php echo $class['kelas_id']; ?>">
-                                            <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Hapus Kelas"><i class="bi bi-trash"></i></button>
                                         </form>
                                     </td>
                                 </tr>
