@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 29, 2025 at 07:50 PM
+-- Generation Time: Oct 29, 2025 at 08:30 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -22,6 +22,22 @@ SET time_zone = "+00:00";
 --
 
 -- --------------------------------------------------------
+
+CREATE TABLE `users` (
+  `user_id` int(11) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` enum('Administrator','Guru','Siswa','Orang Tua','Petugas Tabungan','BK') NOT NULL,
+  `nama_lengkap` varchar(100) NOT NULL,
+  `token_sesi_aktif` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `tahun_pelajaran` (
+  `tahun_pelajaran_id` int(11) NOT NULL,
+  `tahun_ajaran` varchar(20) NOT NULL,
+  `status` enum('Aktif','Tidak Aktif') NOT NULL DEFAULT 'Tidak Aktif'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `siswa` (
   `siswa_id` int(11) NOT NULL,
@@ -53,109 +69,34 @@ CREATE TABLE `siswa` (
   `berat_badan` int(3) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `orang_tua` (
-  `orang_tua_id` int(11) NOT NULL,
-  `siswa_id` int(11) NOT NULL,
-  `tipe` enum('Ayah','Ibu','Wali') NOT NULL,
-  `nama` varchar(100) NOT NULL,
-  `tempat_lahir` varchar(50) DEFAULT NULL,
-  `tanggal_lahir` date DEFAULT NULL,
-  `agama` varchar(20) DEFAULT NULL,
-  `kewarganegaraan` varchar(50) DEFAULT NULL,
-  `pendidikan` varchar(50) DEFAULT NULL,
-  `pekerjaan` varchar(50) DEFAULT NULL,
-  `pengeluaran_perbulan` varchar(50) DEFAULT NULL,
-  `alamat` text DEFAULT NULL,
-  `status_hidup` varchar(20) DEFAULT 'Masih Hidup'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `pendidikan_sebelumnya` (
-  `pendidikan_id` int(11) NOT NULL,
-  `siswa_id` int(11) NOT NULL,
-  `tingkat` varchar(50) NOT NULL,
-  `nama_sekolah` varchar(100) DEFAULT NULL,
-  `tgl_ijazah` date DEFAULT NULL,
-  `no_ijazah` varchar(50) DEFAULT NULL,
-  `tgl_skhun` date DEFAULT NULL,
-  `no_skhun` varchar(50) DEFAULT NULL,
-  `lama_belajar` varchar(20) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `riwayat_pindahan` (
-  `pindahan_id` int(11) NOT NULL,
-  `siswa_id` int(11) NOT NULL,
-  `dari_sekolah` varchar(100) DEFAULT NULL,
-  `alasan` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `kegemaran_siswa` (
-  `kegemaran_id` int(11) NOT NULL,
-  `siswa_id` int(11) NOT NULL,
-  `kesenian` varchar(100) DEFAULT NULL,
-  `olah_raga` varchar(100) DEFAULT NULL,
-  `organisasi` varchar(100) DEFAULT NULL,
-  `lain_lain` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `perkembangan_siswa` (
-  `perkembangan_id` int(11) NOT NULL,
-  `siswa_id` int(11) NOT NULL,
-  `beasiswa` varchar(100) DEFAULT NULL,
-  `tgl_meninggalkan_sekolah` date DEFAULT NULL,
-  `alasan_meninggalkan_sekolah` text DEFAULT NULL,
-  `lulus` tinyint(1) DEFAULT 0,
-  `tgl_ijazah_akhir` date DEFAULT NULL,
-  `no_ijazah_akhir` varchar(50) DEFAULT NULL,
-  `tgl_skhun_akhir` date DEFAULT NULL,
-  `no_skhun_akhir` varchar(50) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `info_setelah_lulus` (
-  `info_id` int(11) NOT NULL,
-  `siswa_id` int(11) NOT NULL,
-  `melanjutkan_ke` varchar(100) DEFAULT NULL,
-  `bekerja_di` varchar(100) DEFAULT NULL,
-  `tgl_mulai_bekerja` date DEFAULT NULL,
-  `penghasilan` varchar(50) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
--- (Struktur tabel lain tetap sama)
+-- (dan seterusnya untuk semua tabel lain)
 
 --
 -- Indexes for dumped tables
 --
 
+ALTER TABLE `users` ADD PRIMARY KEY (`user_id`), ADD UNIQUE KEY `username` (`username`);
+ALTER TABLE `tahun_pelajaran` ADD PRIMARY KEY (`tahun_pelajaran_id`), ADD UNIQUE KEY `tahun_ajaran` (`tahun_ajaran`);
 ALTER TABLE `siswa` ADD PRIMARY KEY (`siswa_id`), ADD UNIQUE KEY `nis` (`nis`), ADD KEY `user_id` (`user_id`), ADD KEY `kelas_id` (`kelas_id`);
-ALTER TABLE `orang_tua` ADD PRIMARY KEY (`orang_tua_id`), ADD KEY `siswa_id` (`siswa_id`);
-ALTER TABLE `pendidikan_sebelumnya` ADD PRIMARY KEY (`pendidikan_id`), ADD KEY `siswa_id` (`siswa_id`);
-ALTER TABLE `riwayat_pindahan` ADD PRIMARY KEY (`pindahan_id`), ADD KEY `siswa_id` (`siswa_id`);
-ALTER TABLE `kegemaran_siswa` ADD PRIMARY KEY (`kegemaran_id`), ADD KEY `siswa_id` (`siswa_id`);
-ALTER TABLE `perkembangan_siswa` ADD PRIMARY KEY (`perkembangan_id`), ADD KEY `siswa_id` (`siswa_id`);
-ALTER TABLE `info_setelah_lulus` ADD PRIMARY KEY (`info_id`), ADD KEY `siswa_id` (`siswa_id`);
+-- (dan seterusnya untuk semua tabel lain)
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
 
+ALTER TABLE `users` MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `tahun_pelajaran` MODIFY `tahun_pelajaran_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `siswa` MODIFY `siswa_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `orang_tua` MODIFY `orang_tua_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `pendidikan_sebelumnya` MODIFY `pendidikan_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `riwayat_pindahan` MODIFY `pindahan_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `kegemaran_siswa` MODIFY `kegemaran_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `perkembangan_siswa` MODIFY `perkembangan_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `info_setelah_lulus` MODIFY `info_id` int(11) NOT NULL AUTO_INCREMENT;
+-- (dan seterusnya untuk semua tabel lain)
 
 --
 -- Constraints for dumped tables
 --
 
-ALTER TABLE `orang_tua` ADD CONSTRAINT `fk_siswa_ortu` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
-ALTER TABLE `pendidikan_sebelumnya` ADD CONSTRAINT `fk_siswa_pendidikan` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
-ALTER TABLE `riwayat_pindahan` ADD CONSTRAINT `fk_siswa_pindahan` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
-ALTER TABLE `kegemaran_siswa` ADD CONSTRAINT `fk_siswa_kegemaran` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
-ALTER TABLE `perkembangan_siswa` ADD CONSTRAINT `fk_siswa_perkembangan` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
-ALTER TABLE `info_setelah_lulus` ADD CONSTRAINT `fk_siswa_lulus` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
+-- (semua constraint)
 
--- (Sisa file database.sql)
 COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
