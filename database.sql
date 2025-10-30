@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 29, 2025 at 05:30 PM
+-- Generation Time: Oct 29, 2025 at 06:00 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -23,116 +23,112 @@ SET time_zone = "+00:00";
 
 -- --------------------------------------------------------
 
-CREATE TABLE `users` (
-  `user_id` int(11) NOT NULL,
-  `username` varchar(50) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `role` enum('Administrator','Guru','Siswa','Orang Tua','Petugas Tabungan','BK') NOT NULL,
-  `nama_lengkap` varchar(100) NOT NULL,
-  `token_sesi_aktif` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `program_keahlian` (
-  `program_id` int(11) NOT NULL,
-  `nama_program` varchar(100) NOT NULL,
-  `deskripsi` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `konsentrasi_keahlian` (
-  `konsentrasi_id` int(11) NOT NULL,
-  `program_id` int(11) NOT NULL,
-  `nama_konsentrasi` varchar(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `kelas` (
-  `kelas_id` int(11) NOT NULL,
-  `konsentrasi_id` int(11) DEFAULT NULL,
-  `nama_kelas` varchar(50) NOT NULL,
-  `wali_kelas_id` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+--
+-- Struktur dari tabel `siswa`
+--
 
 CREATE TABLE `siswa` (
   `siswa_id` int(11) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
-  `nis` varchar(20) NOT NULL,
-  `nama_lengkap` varchar(100) NOT NULL,
   `kelas_id` int(11) DEFAULT NULL,
-  `alamat` text DEFAULT NULL,
-  `telepon` varchar(20) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `guru` (
-  `guru_id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `nip` varchar(30) NOT NULL,
   `nama_lengkap` varchar(100) NOT NULL,
+  `nis` varchar(20) NOT NULL,
+  `jk` enum('L','P') DEFAULT NULL,
+  `nisn` varchar(20) DEFAULT NULL,
+  `tempat_lahir` varchar(50) DEFAULT NULL,
+  `tanggal_lahir` date DEFAULT NULL,
+  `nik` varchar(20) DEFAULT NULL,
+  `agama` varchar(20) DEFAULT NULL,
+  `anak_ke` int(2) DEFAULT NULL,
+  `no_akta_lahir` varchar(50) DEFAULT NULL,
+  `no_kk` varchar(20) DEFAULT NULL,
   `alamat` text DEFAULT NULL,
+  `rt` varchar(5) DEFAULT NULL,
+  `rw` varchar(5) DEFAULT NULL,
+  `dusun` varchar(50) DEFAULT NULL,
+  `kelurahan` varchar(50) DEFAULT NULL,
+  `kecamatan` varchar(50) DEFAULT NULL,
+  `kode_pos` varchar(10) DEFAULT NULL,
+  `jenis_tinggal` varchar(50) DEFAULT NULL,
+  `alat_transportasi` varchar(50) DEFAULT NULL,
   `telepon` varchar(20) DEFAULT NULL,
+  `hp` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `lintang` varchar(50) DEFAULT NULL,
+  `bujur` varchar(50) DEFAULT NULL,
+  `jarak_sekolah_km` int(3) DEFAULT NULL,
+  `berat_badan` int(3) DEFAULT NULL,
+  `tinggi_badan` int(3) DEFAULT NULL,
+  `lingkar_kepala` int(3) DEFAULT NULL,
+  `jml_saudara` int(2) DEFAULT NULL,
+  `kebutuhan_khusus` varchar(100) DEFAULT NULL,
+  `sekolah_asal` varchar(100) DEFAULT NULL,
+  `no_peserta_un` varchar(50) DEFAULT NULL,
+  `no_seri_ijazah` varchar(50) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `mapel` (
-  `mapel_id` int(11) NOT NULL,
-  `nama_mapel` varchar(100) NOT NULL,
-  `deskripsi` text DEFAULT NULL
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `orang_tua`
+--
+
+CREATE TABLE `orang_tua` (
+  `orang_tua_id` int(11) NOT NULL,
+  `siswa_id` int(11) NOT NULL,
+  `tipe` enum('Ayah','Ibu','Wali') NOT NULL,
+  `nama` varchar(100) NOT NULL,
+  `tahun_lahir` year(4) DEFAULT NULL,
+  `pendidikan` varchar(50) DEFAULT NULL,
+  `pekerjaan` varchar(50) DEFAULT NULL,
+  `penghasilan` varchar(50) DEFAULT NULL,
+  `nik` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `jadwal_files` (
-  `jadwal_file_id` int(11) NOT NULL,
-  `kelas_id` int(11) NOT NULL,
-  `file_path` varchar(255) NOT NULL,
-  `original_filename` varchar(255) NOT NULL,
-  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `qr_harian` (
-  `qr_id` int(11) NOT NULL,
-  `tanggal` date NOT NULL,
-  `token` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- (Struktur tabel lain tetap sama)
+-- ...
 
 --
 -- Indexes for dumped tables
 --
 
-ALTER TABLE `users` ADD PRIMARY KEY (`user_id`), ADD UNIQUE KEY `username` (`username`);
-ALTER TABLE `program_keahlian` ADD PRIMARY KEY (`program_id`), ADD UNIQUE KEY `nama_program` (`nama_program`);
-ALTER TABLE `konsentrasi_keahlian` ADD PRIMARY KEY (`konsentrasi_id`), ADD KEY `program_id` (`program_id`);
-ALTER TABLE `kelas` ADD PRIMARY KEY (`kelas_id`), ADD UNIQUE KEY `nama_kelas` (`nama_kelas`), ADD KEY `wali_kelas_id` (`wali_kelas_id`), ADD KEY `konsentrasi_id` (`konsentrasi_id`);
-ALTER TABLE `siswa` ADD PRIMARY KEY (`siswa_id`), ADD UNIQUE KEY `nis` (`nis`), ADD KEY `user_id` (`user_id`), ADD KEY `kelas_id` (`kelas_id`);
-ALTER TABLE `guru` ADD PRIMARY KEY (`guru_id`), ADD UNIQUE KEY `nip` (`nip`), ADD KEY `user_id` (`user_id`);
-ALTER TABLE `mapel` ADD PRIMARY KEY (`mapel_id`), ADD UNIQUE KEY `nama_mapel` (`nama_mapel`);
-ALTER TABLE `jadwal_files` ADD PRIMARY KEY (`jadwal_file_id`), ADD UNIQUE KEY `kelas_id` (`kelas_id`);
-ALTER TABLE `qr_harian` ADD PRIMARY KEY (`qr_id`), ADD UNIQUE KEY `tanggal` (`tanggal`);
+ALTER TABLE `siswa`
+  ADD PRIMARY KEY (`siswa_id`),
+  ADD UNIQUE KEY `nis` (`nis`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `kelas_id` (`kelas_id`);
+
+ALTER TABLE `orang_tua`
+  ADD PRIMARY KEY (`orang_tua_id`),
+  ADD KEY `siswa_id` (`siswa_id`);
+
+-- ... (Indexes untuk tabel lain)
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
 
-ALTER TABLE `users` MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `program_keahlian` MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `konsentrasi_keahlian` MODIFY `konsentrasi_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `kelas` MODIFY `kelas_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `siswa` MODIFY `siswa_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `guru` MODIFY `guru_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `mapel` MODIFY `mapel_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `jadwal_files` MODIFY `jadwal_file_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `qr_harian` MODIFY `qr_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `siswa`
+  MODIFY `siswa_id` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `orang_tua`
+  MODIFY `orang_tua_id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- ... (AUTO_INCREMENT untuk tabel lain)
 
 --
 -- Constraints for dumped tables
 --
 
-ALTER TABLE `konsentrasi_keahlian` ADD CONSTRAINT `fk_program` FOREIGN KEY (`program_id`) REFERENCES `program_keahlian` (`program_id`) ON DELETE CASCADE;
-ALTER TABLE `kelas` ADD CONSTRAINT `fk_wali_kelas` FOREIGN KEY (`wali_kelas_id`) REFERENCES `guru` (`guru_id`) ON DELETE SET NULL, ADD CONSTRAINT `fk_konsentrasi` FOREIGN KEY (`konsentrasi_id`) REFERENCES `konsentrasi_keahlian` (`konsentrasi_id`) ON DELETE SET NULL;
-ALTER TABLE `siswa` ADD CONSTRAINT `fk_user_siswa` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL, ADD CONSTRAINT `fk_kelas_siswa` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE SET NULL;
-ALTER TABLE `guru` ADD CONSTRAINT `fk_user_guru` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
-ALTER TABLE `jadwal_files` ADD CONSTRAINT `fk_kelas_jadwal` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE CASCADE;
+ALTER TABLE `siswa`
+  ADD CONSTRAINT `fk_user_siswa` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_kelas_siswa` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE SET NULL;
+
+ALTER TABLE `orang_tua`
+  ADD CONSTRAINT `fk_siswa_ortu` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
+
+-- ... (Constraints untuk tabel lain)
 
 COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

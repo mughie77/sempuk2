@@ -6,7 +6,11 @@ require_role(['Administrator']);
 require_once __DIR__ . '/../core/db_connect.php';
 
 $students = [];
-$sql = "SELECT siswa_id, nis, nama_lengkap, alamat, telepon FROM siswa ORDER BY nama_lengkap ASC";
+// Join dengan kelas untuk menampilkan nama kelas
+$sql = "SELECT s.siswa_id, s.nis, s.nama_lengkap, s.telepon, k.nama_kelas
+        FROM siswa s
+        LEFT JOIN kelas k ON s.kelas_id = k.kelas_id
+        ORDER BY s.nama_lengkap ASC";
 if ($result = $mysqli->query($sql)) {
     $students = $result->fetch_all(MYSQLI_ASSOC);
     $result->free();
@@ -24,7 +28,6 @@ include __DIR__ . '/../includes/topbar.php';
         <li class="breadcrumb-item active">Manajemen Siswa</li>
     </ol>
 
-    <!-- Flash Message -->
     <?php if (isset($_SESSION['flash_message'])): ?>
     <div class="alert alert-<?php echo $_SESSION['flash_message']['type']; ?> alert-dismissible fade show" role="alert">
         <?php echo $_SESSION['flash_message']['message']; ?>
@@ -36,21 +39,21 @@ include __DIR__ . '/../includes/topbar.php';
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span><i class="bi bi-person-badge me-1"></i>Data Induk Siswa</span>
-            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSiswaModal">
-                <i class="bi bi-plus-circle me-1"></i> Tambah Siswa Baru
-            </button>
+            <div>
+                 <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Impor dari Excel
+                </button>
+                <a href="<?php echo BASE_URL; ?>pages/admin_siswa_form.php" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Tambah Siswa Baru
+                </a>
+            </div>
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped table-bordered">
                     <thead class="table-dark">
                         <tr>
-                            <th>No</th>
-                            <th>NIS</th>
-                            <th>Nama Lengkap</th>
-                            <th>Alamat</th>
-                            <th>Telepon</th>
-                            <th>Aksi</th>
+                            <th>No</th><th>NIS</th><th>Nama Lengkap</th><th>Kelas</th><th>Telepon</th><th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -62,15 +65,13 @@ include __DIR__ . '/../includes/topbar.php';
                                     <td><?php echo $i++; ?></td>
                                     <td><?php echo htmlspecialchars($student['nis']); ?></td>
                                     <td><?php echo htmlspecialchars($student['nama_lengkap']); ?></td>
-                                    <td><?php echo htmlspecialchars($student['alamat']); ?></td>
+                                    <td><?php echo htmlspecialchars($student['nama_kelas'] ?? 'Belum ada kelas'); ?></td>
                                     <td><?php echo htmlspecialchars($student['telepon']); ?></td>
                                     <td>
-                                        <button class="btn btn-warning btn-sm edit-btn" title="Edit"
-                                                data-bs-toggle="modal" data-bs-target="#editSiswaModal"
-                                                data-id="<?php echo $student['siswa_id']; ?>">
+                                        <a href="<?php echo BASE_URL; ?>pages/admin_siswa_form.php?edit_id=<?php echo $student['siswa_id']; ?>" class="btn btn-warning btn-sm" title="Edit">
                                             <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                        <form action="<?php echo BASE_URL; ?>core/siswa_crud_process.php" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data siswa ini?');">
+                                        </a>
+                                        <form action="<?php echo BASE_URL; ?>core/siswa_crud_process.php" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data siswa ini? Ini juga akan menghapus akun login siswa.');">
                                             <input type="hidden" name="action" value="delete_siswa">
                                             <input type="hidden" name="siswa_id" value="<?php echo $student['siswa_id']; ?>">
                                             <button type="submit" class="btn btn-danger btn-sm" title="Hapus"><i class="bi bi-trash"></i></button>
@@ -86,76 +87,27 @@ include __DIR__ . '/../includes/topbar.php';
     </div>
 </div>
 
-<!-- Modal Tambah Siswa -->
-<div class="modal fade" id="addSiswaModal" tabindex="-1" aria-labelledby="addSiswaModalLabel" aria-hidden="true">
+<!-- Modal Impor CSV -->
+<div class="modal fade" id="importExcelModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="addSiswaModalLabel">Tambah Siswa Baru</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title">Impor Data Siswa dari CSV</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form action="<?php echo BASE_URL; ?>core/siswa_crud_process.php" method="POST">
-        <div class="modal-body">
-          <input type="hidden" name="action" value="add_siswa">
-          <div class="mb-3">
-            <label for="add-nis" class="form-label">NIS</label>
-            <input type="text" class="form-control" id="add-nis" name="nis" required>
+      <form action="<?php echo BASE_URL; ?>core/siswa_import_csv.php" method="POST" enctype="multipart/form-data">
+          <div class="modal-body">
+            <p>Unggah file CSV (.csv) dengan kolom yang sesuai untuk mengimpor banyak data siswa sekaligus. Akun login akan dibuat secara otomatis menggunakan NIS sebagai username dan password awal.</p>
+            <div class="mb-3">
+                <label for="csv_file" class="form-label">Pilih File CSV (.csv)</label>
+                <input type="file" class="form-control" name="csv_file" id="csv_file" accept=".csv" required>
+            </div>
+            <p><a href="<?php echo BASE_URL; ?>assets/templates/template_siswa.csv" download>Unduh Template CSV</a></p>
           </div>
-          <div class="mb-3">
-            <label for="add-nama_lengkap" class="form-label">Nama Lengkap</label>
-            <input type="text" class="form-control" id="add-nama_lengkap" name="nama_lengkap" required>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary">Impor</button>
           </div>
-          <div class="mb-3">
-            <label for="add-alamat" class="form-label">Alamat</label>
-            <textarea class="form-control" id="add-alamat" name="alamat" rows="3"></textarea>
-          </div>
-          <div class="mb-3">
-            <label for="add-telepon" class="form-label">Telepon</label>
-            <input type="text" class="form-control" id="add-telepon" name="telepon">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- Modal Edit Siswa -->
-<div class="modal fade" id="editSiswaModal" tabindex="-1" aria-labelledby="editSiswaModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editSiswaModalLabel">Edit Data Siswa</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form action="<?php echo BASE_URL; ?>core/siswa_crud_process.php" method="POST">
-        <div class="modal-body">
-          <input type="hidden" name="action" value="edit_siswa">
-          <input type="hidden" name="siswa_id" id="edit-siswa_id">
-          <div class="mb-3">
-            <label for="edit-nis" class="form-label">NIS</label>
-            <input type="text" class="form-control" id="edit-nis" name="nis" required>
-          </div>
-          <div class="mb-3">
-            <label for="edit-nama_lengkap" class="form-label">Nama Lengkap</label>
-            <input type="text" class="form-control" id="edit-nama_lengkap" name="nama_lengkap" required>
-          </div>
-           <div class="mb-3">
-            <label for="edit-alamat" class="form-label">Alamat</label>
-            <textarea class="form-control" id="edit-alamat" name="alamat" rows="3"></textarea>
-          </div>
-          <div class="mb-3">
-            <label for="edit-telepon" class="form-label">Telepon</label>
-            <input type="text" class="form-control" id="edit-telepon" name="telepon">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-        </div>
       </form>
     </div>
   </div>
@@ -165,30 +117,3 @@ include __DIR__ . '/../includes/topbar.php';
 include __DIR__ . '/../includes/footer.php';
 $mysqli->close();
 ?>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const editSiswaModal = document.getElementById('editSiswaModal');
-    editSiswaModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const siswaId = button.getAttribute('data-id');
-        const url = `<?php echo BASE_URL; ?>core/siswa_crud_process.php?action=get_siswa_details&id=${siswaId}`;
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if(data.error) {
-                    alert(data.error);
-                } else {
-                    const modal = editSiswaModal;
-                    modal.querySelector('#edit-siswa_id').value = data.siswa_id;
-                    modal.querySelector('#edit-nis').value = data.nis;
-                    modal.querySelector('#edit-nama_lengkap').value = data.nama_lengkap;
-                    modal.querySelector('#edit-alamat').value = data.alamat;
-                    modal.querySelector('#edit-telepon').value = data.telepon;
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    });
-});
-</script>
