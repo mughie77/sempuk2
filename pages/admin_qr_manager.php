@@ -5,18 +5,27 @@ require_once __DIR__ . '/../core/auth_check.php';
 require_role(['Administrator']);
 require_once __DIR__ . '/../core/db_connect.php';
 
-// --- Autoloader sederhana untuk BaconQrCode ---
+// --- Autoloader sederhana untuk library ---
 spl_autoload_register(function ($class) {
-    $prefix = 'BaconQrCode\\';
-    $base_dir = __DIR__ . '/../includes/lib/BaconQrCode/';
-    $len = strlen($prefix);
-    if (strncmp($prefix, $class, $len) !== 0) {
-        return;
-    }
-    $relative_class = substr($class, $len);
-    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
-    if (file_exists($file)) {
-        require $file;
+    // Definisi namespace dan path dasarnya
+    $namespaces = [
+        'BaconQrCode\\' => __DIR__ . '/../includes/lib/BaconQrCode/',
+        'DASPRiD\\Enum\\' => __DIR__ . '/../includes/lib/DASPRiD/Enum/',
+    ];
+
+    foreach ($namespaces as $prefix => $base_dir) {
+        $len = strlen($prefix);
+        if (strncmp($prefix, $class, $len) !== 0) {
+            continue;
+        }
+
+        $relative_class = substr($class, $len);
+        $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+
+        if (file_exists($file)) {
+            require $file;
+            return;
+        }
     }
 });
 
