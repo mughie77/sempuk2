@@ -87,22 +87,22 @@ include __DIR__ . '/../includes/topbar.php';
     </div>
 </div>
 
-<!-- Modal Impor CSV -->
+<!-- Modal Impor Excel -->
 <div class="modal fade" id="importExcelModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Impor Data Siswa dari CSV</h5>
+        <h5 class="modal-title">Impor Data Siswa dari Excel</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form action="<?php echo BASE_URL; ?>core/siswa_import_csv.php" method="POST" enctype="multipart/form-data">
+      <form action="<?php echo BASE_URL; ?>core/siswa_import_excel.php" method="POST" enctype="multipart/form-data">
           <div class="modal-body">
-            <p>Unggah file CSV (.csv) dengan kolom yang sesuai untuk mengimpor banyak data siswa sekaligus. Akun login akan dibuat secara otomatis menggunakan NIS sebagai username dan password awal.</p>
+            <p>Unggah file Excel (.xlsx) dengan kolom yang sesuai untuk mengimpor banyak data siswa sekaligus. Akun login akan dibuat secara otomatis menggunakan NIS sebagai username dan password awal.</p>
             <div class="mb-3">
-                <label for="csv_file" class="form-label">Pilih File CSV (.csv)</label>
-                <input type="file" class="form-control" name="csv_file" id="csv_file" accept=".csv" required>
+                <label for="excel_file" class="form-label">Pilih File Excel (.xlsx)</label>
+                <input type="file" class="form-control" name="excel_file" id="excel_file" accept=".xlsx" required>
             </div>
-            <p><a href="<?php echo BASE_URL; ?>assets/templates/template_siswa.csv" download>Unduh Template CSV</a></p>
+            <p><a href="<?php echo BASE_URL; ?>core/download_template.php">Unduh Template Excel (.xlsx)</a></p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>

@@ -1,9 +1,10 @@
 <?php
-// /core/siswa_import_csv.php
+// /core/siswa_import_excel.php
 
 require_once __DIR__ . '/auth_check.php';
 require_role(['Administrator']);
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/../includes/lib/simplexlsx.class.php';
 
 function redirect_with_message($message, $type = 'success') {
     $_SESSION['flash_message'] = ['message' => $message, 'type' => $type];
@@ -11,28 +12,27 @@ function redirect_with_message($message, $type = 'success') {
     exit();
 }
 
-if ($_SERVER["REQUEST_METHOD"] !== "POST" || !isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
-    redirect_with_message('Silakan pilih file CSV untuk diunggah.', 'danger');
+if ($_SERVER["REQUEST_METHOD"] !== "POST" || !isset($_FILES['excel_file']) || $_FILES['excel_file']['error'] !== UPLOAD_ERR_OK) {
+    redirect_with_message('Silakan pilih file Excel untuk diunggah.', 'danger');
 }
 
-$file = $_FILES['csv_file'];
-$allowed_mimes = ['text/csv', 'application/vnd.ms-excel'];
+$file = $_FILES['excel_file'];
+$allowed_mimes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
 if (!in_array($file['type'], $allowed_mimes)) {
-    redirect_with_message('Hanya file .csv yang diizinkan.', 'danger');
+    redirect_with_message('Hanya file .xlsx yang diizinkan.', 'danger');
 }
 
-$success_count = 0;
-$error_count = 0;
-$errors = [];
+if ($xlsx = SimpleXLSX::parse($file['tmp_name'])) {
+    $rows = $xlsx->rows();
+    $header = array_shift($rows);
+    $success_count = 0;
+    $error_count = 0;
+    $errors = [];
 
-$mysqli->begin_transaction();
-try {
-    if (($handle = fopen($file['tmp_name'], "r")) !== FALSE) {
-        $header = fgetcsv($handle, 1000, ","); // Baca header
-        $row_num = 1;
-
-        while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-            $row_num++;
+    $mysqli->begin_transaction();
+    try {
+        foreach ($rows as $i => $data) {
+            $row_num = $i + 2;
             $row = array_combine($header, $data);
 
             $nis = $row['nis'] ?? null;
@@ -86,24 +86,24 @@ try {
             } catch (Exception $e) {
                 $errors[] = "Baris $row_num: " . $e->getMessage();
                 $error_count++;
-                // Jangan hentikan proses, lanjutkan ke baris berikutnya
             }
         }
-        fclose($handle);
+
+        if ($error_count > 0) {
+            throw new Exception("Proses impor selesai dengan beberapa kesalahan.");
+        }
+
+        $mysqli->commit();
+        redirect_with_message("$success_count data siswa berhasil diimpor.");
+
+    } catch (Exception $e) {
+        $mysqli->rollback();
+        $error_summary = implode('<br>', array_slice($errors, 0, 5));
+        if (count($errors) > 5) $error_summary .= '<br>...dan lainnya.';
+        redirect_with_message("Impor gagal: $success_count berhasil, $error_count gagal.<br>Contoh Error:<br>$error_summary", 'danger');
     }
-
-    if ($error_count > 0) {
-        throw new Exception("Proses impor selesai dengan beberapa kesalahan.");
-    }
-
-    $mysqli->commit();
-    redirect_with_message("$success_count data siswa berhasil diimpor.");
-
-} catch (Exception $e) {
-    $mysqli->rollback();
-    $error_summary = implode('<br>', array_slice($errors, 0, 5));
-    if (count($errors) > 5) $error_summary .= '<br>...dan lainnya.';
-    redirect_with_message("Impor gagal: $success_count berhasil, $error_count gagal.<br>Contoh Error:<br>$error_summary", 'danger');
+} else {
+    redirect_with_message('Gagal membaca file Excel: ' . SimpleXLSX::parseError(), 'danger');
 }
 
 $mysqli->close();
