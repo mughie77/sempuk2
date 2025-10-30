@@ -4,7 +4,35 @@
 require_once __DIR__ . '/../core/auth_check.php';
 require_role(['Administrator']);
 require_once __DIR__ . '/../core/db_connect.php';
-require_once __DIR__ . '/../includes/lib/phpqrcode/qrlib.php';
+
+// --- Autoloader sederhana untuk BaconQrCode ---
+spl_autoload_register(function ($class) {
+    $prefix = 'BaconQrCode\\';
+    $base_dir = __DIR__ . '/../includes/lib/BaconQrCode/';
+    $len = strlen($prefix);
+    if (strncmp($prefix, $class, $len) !== 0) {
+        return;
+    }
+    $relative_class = substr($class, $len);
+    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+    if (file_exists($file)) {
+        require $file;
+    }
+});
+
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
+
+// Buat tabel jika belum ada
+$mysqli->query("CREATE TABLE IF NOT EXISTS `qr_harian` (
+  `qr_id` int(11) NOT NULL AUTO_INCREMENT,
+  `tanggal` date NOT NULL,
+  `token` varchar(255) NOT NULL,
+  PRIMARY KEY (`qr_id`),
+  UNIQUE KEY `tanggal` (`tanggal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;");
 
 $today = date('Y-m-d');
 $qr_token = null;
@@ -23,17 +51,14 @@ if ($stmt = $mysqli->prepare($sql)) {
 
 // Logika untuk generate token baru
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'generate_qr') {
-    // Generate token unik baru
     $new_token = 'SEMPU_PRESENSI_' . date('Ymd') . '_' . bin2hex(random_bytes(16));
 
-    // Simpan atau perbarui token di database (menggunakan ON DUPLICATE KEY UPDATE)
     $sql_insert = "INSERT INTO qr_harian (tanggal, token) VALUES (?, ?) ON DUPLICATE KEY UPDATE token = ?";
     if ($stmt_insert = $mysqli->prepare($sql_insert)) {
         $stmt_insert->bind_param("sss", $today, $new_token, $new_token);
         $stmt_insert->execute();
         $stmt_insert->close();
 
-        // Perbarui variabel token dan redirect untuk refresh halaman
         $qr_token = $new_token;
         $_SESSION['flash_message'] = ['message' => 'Token QR baru untuk hari ini telah berhasil dibuat.', 'type' => 'success'];
         header("Location: " . $_SERVER['REQUEST_URI']);
@@ -41,17 +66,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['
     }
 }
 
-// Path untuk menyimpan gambar QR Code
-$qr_image_path = null;
+// Buat QR Code sebagai string SVG
+$qr_svg_string = null;
 if ($qr_token) {
-    // Pastikan direktori 'generated' ada di dalam 'assets/img'
-    $qr_dir = __DIR__ . '/../assets/img/generated/';
-    if (!is_dir($qr_dir)) {
-        mkdir($qr_dir, 0755, true);
-    }
-    $qr_file = $qr_dir . 'presensi_harian.png';
-    QRcode::png($qr_token, $qr_file, QR_ECLEVEL_L, 10);
-    $qr_image_path = BASE_URL . 'assets/img/generated/presensi_harian.png';
+    $renderer = new ImageRenderer(
+        new RendererStyle(300), // Ukuran dalam piksel
+        new SvgImageBackEnd()
+    );
+    $writer = new Writer($renderer);
+    $qr_svg_string = $writer->writeString($qr_token);
 }
 
 
@@ -79,9 +102,11 @@ include __DIR__ . '/../includes/topbar.php';
             <i class="bi bi-qr-code-scan me-1"></i>QR Code Presensi untuk Tanggal: <?php echo date('d F Y'); ?>
         </div>
         <div class="card-body text-center">
-            <?php if ($qr_image_path): ?>
+            <?php if ($qr_svg_string): ?>
                 <p>Pindai kode QR di bawah ini untuk melakukan presensi masuk harian.</p>
-                <img src="<?php echo $qr_image_path; ?>?t=<?php echo time(); ?>" alt="QR Code Presensi Harian" class="img-fluid border rounded" style="max-width: 300px;">
+                <div class="border rounded d-inline-block">
+                    <?php echo $qr_svg_string; ?>
+                </div>
                 <p class="mt-3"><strong>Token Aktif:</strong><br><small class="text-muted"><?php echo htmlspecialchars($qr_token); ?></small></p>
             <?php else: ?>
                 <p class="text-danger">Belum ada token QR yang dibuat untuk hari ini.</p>
