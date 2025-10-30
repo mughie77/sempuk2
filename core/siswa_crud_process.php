@@ -1,7 +1,7 @@
 <?php
 // /core/siswa_crud_process.php
 
-require_once __DIR__ . '/init.php';
+require_once __DIR__ . '/auth_check.php';
 require_role(['Administrator']);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
