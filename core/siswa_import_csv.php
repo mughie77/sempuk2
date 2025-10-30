@@ -57,10 +57,9 @@ try {
                 $stmt_user->close();
 
                 // 2. Siapkan dan simpan data siswa
-                $siswa_data = $row;
-                $siswa_data['user_id'] = $user_id;
+                $row['user_id'] = $user_id;
                 $allowed_siswa_cols = array_flip(['user_id', 'nis', 'nama_lengkap', 'jk', 'nisn', 'tempat_lahir', 'tanggal_lahir', 'nik', 'agama', 'anak_ke', 'no_akta_lahir', 'no_kk', 'alamat', 'rt', 'rw', 'dusun', 'kelurahan', 'kecamatan', 'kode_pos', 'jenis_tinggal', 'alat_transportasi', 'telepon', 'hp', 'email', 'jarak_sekolah_km', 'berat_badan', 'tinggi_badan', 'lingkar_kepala', 'jml_saudara', 'kebutuhan_khusus', 'sekolah_asal', 'no_peserta_un', 'no_seri_ijazah']);
-                $siswa_insert_data = array_intersect_key($siswa_data, $allowed_siswa_cols);
+                $siswa_insert_data = array_intersect_key($row, $allowed_siswa_cols);
 
                 $keys = implode(', ', array_keys($siswa_insert_data));
                 $placeholders = implode(', ', array_fill(0, count($siswa_insert_data), '?'));
