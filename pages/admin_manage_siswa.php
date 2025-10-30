@@ -36,55 +36,70 @@ include __DIR__ . '/../includes/topbar.php';
     <?php unset($_SESSION['flash_message']); ?>
     <?php endif; ?>
 
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-person-badge me-1"></i>Data Induk Siswa</span>
-            <div>
-                 <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#importExcelModal">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Impor dari Excel
-                </button>
-                <a href="<?php echo BASE_URL; ?>pages/admin_siswa_form.php" class="btn btn-primary btn-sm">
-                    <i class="bi bi-plus-circle me-1"></i> Tambah Siswa Baru
-                </a>
+    <form action="<?php echo BASE_URL; ?>core/generate_pdf_buku_induk.php" method="POST" target="_blank">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-person-badge me-1"></i>Data Induk Siswa</span>
+                <div>
+                    <button type="submit" class="btn btn-info btn-sm">
+                        <i class="bi bi-printer me-1"></i> Cetak Laporan PDF
+                    </button>
+                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Impor dari Excel
+                    </button>
+                    <a href="<?php echo BASE_URL; ?>pages/admin_siswa_form.php" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i> Tambah Siswa Baru
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 1%;"><input type="checkbox" id="select-all-checkbox"></th>
+                                <th>No</th>
+                                <th>NIS</th>
+                                <th>Nama Lengkap</th>
+                                <th>Kelas</th>
+                                <th>Telepon</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($students)): ?>
+                                <tr><td colspan="7" class="text-center">Belum ada data siswa.</td></tr>
+                            <?php else: ?>
+                                <?php $i = 1; foreach ($students as $student): ?>
+                                    <tr>
+                                        <td><input type="checkbox" name="siswa_ids[]" value="<?php echo $student['siswa_id']; ?>" class="student-checkbox"></td>
+                                        <td><?php echo $i++; ?></td>
+                                        <td><?php echo htmlspecialchars($student['nis']); ?></td>
+                                        <td><?php echo htmlspecialchars($student['nama_lengkap']); ?></td>
+                                        <td><?php echo htmlspecialchars($student['nama_kelas'] ?? 'Belum ada kelas'); ?></td>
+                                        <td><?php echo htmlspecialchars($student['telepon']); ?></td>
+                                        <td>
+                                            <a href="<?php echo BASE_URL; ?>pages/admin_siswa_form.php?edit_id=<?php echo $student['siswa_id']; ?>" class="btn btn-warning btn-sm" title="Edit">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                            <a href="<?php echo BASE_URL; ?>core/generate_pdf_buku_induk.php?siswa_id=<?php echo $student['siswa_id']; ?>" class="btn btn-info btn-sm" title="Cetak PDF" target="_blank">
+                                                <i class="bi bi-printer"></i>
+                                            </a>
+                                            <form action="<?php echo BASE_URL; ?>core/siswa_crud_process.php" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data siswa ini? Ini juga akan menghapus akun login siswa.');">
+                                                <input type="hidden" name="action" value="delete_siswa">
+                                                <input type="hidden" name="siswa_id" value="<?php echo $student['siswa_id']; ?>">
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Hapus"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-bordered">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>No</th><th>NIS</th><th>Nama Lengkap</th><th>Kelas</th><th>Telepon</th><th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($students)): ?>
-                            <tr><td colspan="6" class="text-center">Belum ada data siswa.</td></tr>
-                        <?php else: ?>
-                            <?php $i = 1; foreach ($students as $student): ?>
-                                <tr>
-                                    <td><?php echo $i++; ?></td>
-                                    <td><?php echo htmlspecialchars($student['nis']); ?></td>
-                                    <td><?php echo htmlspecialchars($student['nama_lengkap']); ?></td>
-                                    <td><?php echo htmlspecialchars($student['nama_kelas'] ?? 'Belum ada kelas'); ?></td>
-                                    <td><?php echo htmlspecialchars($student['telepon']); ?></td>
-                                    <td>
-                                        <a href="<?php echo BASE_URL; ?>pages/admin_siswa_form.php?edit_id=<?php echo $student['siswa_id']; ?>" class="btn btn-warning btn-sm" title="Edit">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <form action="<?php echo BASE_URL; ?>core/siswa_crud_process.php" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data siswa ini? Ini juga akan menghapus akun login siswa.');">
-                                            <input type="hidden" name="action" value="delete_siswa">
-                                            <input type="hidden" name="siswa_id" value="<?php echo $student['siswa_id']; ?>">
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Hapus"><i class="bi bi-trash"></i></button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    </form>
 </div>
 
 <!-- Modal Impor Excel -->
@@ -112,6 +127,19 @@ include __DIR__ . '/../includes/topbar.php';
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+
+    selectAllCheckbox.addEventListener('change', function() {
+        studentCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+    });
+});
+</script>
 
 <?php
 include __DIR__ . '/../includes/footer.php';
