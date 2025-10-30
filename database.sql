@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 29, 2025 at 12:25 AM
+-- Generation Time: Oct 29, 2025 at 05:30 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -32,9 +32,6 @@ CREATE TABLE `users` (
   `token_sesi_aktif` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-INSERT INTO `users` (`user_id`, `username`, `password`, `role`, `nama_lengkap`) VALUES
-(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrator', 'Admin Utama');
 
 CREATE TABLE `program_keahlian` (
   `program_id` int(11) NOT NULL,
@@ -82,14 +79,12 @@ CREATE TABLE `mapel` (
   `deskripsi` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `jadwal_pelajaran` (
-  `jadwal_id` int(11) NOT NULL,
+CREATE TABLE `jadwal_files` (
+  `jadwal_file_id` int(11) NOT NULL,
   `kelas_id` int(11) NOT NULL,
-  `mapel_id` int(11) NOT NULL,
-  `guru_id` int(11) NOT NULL,
-  `hari` enum('Senin','Selasa','Rabu','Kamis','Jumat','Sabtu') NOT NULL,
-  `jam_mulai` time NOT NULL,
-  `jam_selesai` time NOT NULL
+  `file_path` varchar(255) NOT NULL,
+  `original_filename` varchar(255) NOT NULL,
+  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `qr_harian` (
@@ -109,21 +104,21 @@ ALTER TABLE `kelas` ADD PRIMARY KEY (`kelas_id`), ADD UNIQUE KEY `nama_kelas` (`
 ALTER TABLE `siswa` ADD PRIMARY KEY (`siswa_id`), ADD UNIQUE KEY `nis` (`nis`), ADD KEY `user_id` (`user_id`), ADD KEY `kelas_id` (`kelas_id`);
 ALTER TABLE `guru` ADD PRIMARY KEY (`guru_id`), ADD UNIQUE KEY `nip` (`nip`), ADD KEY `user_id` (`user_id`);
 ALTER TABLE `mapel` ADD PRIMARY KEY (`mapel_id`), ADD UNIQUE KEY `nama_mapel` (`nama_mapel`);
-ALTER TABLE `jadwal_pelajaran` ADD PRIMARY KEY (`jadwal_id`), ADD KEY `kelas_id` (`kelas_id`), ADD KEY `mapel_id` (`mapel_id`), ADD KEY `guru_id` (`guru_id`);
+ALTER TABLE `jadwal_files` ADD PRIMARY KEY (`jadwal_file_id`), ADD UNIQUE KEY `kelas_id` (`kelas_id`);
 ALTER TABLE `qr_harian` ADD PRIMARY KEY (`qr_id`), ADD UNIQUE KEY `tanggal` (`tanggal`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
 
-ALTER TABLE `users` MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+ALTER TABLE `users` MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `program_keahlian` MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `konsentrasi_keahlian` MODIFY `konsentrasi_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `kelas` MODIFY `kelas_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `siswa` MODIFY `siswa_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `guru` MODIFY `guru_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `mapel` MODIFY `mapel_id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `jadwal_pelajaran` MODIFY `jadwal_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `jadwal_files` MODIFY `jadwal_file_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `qr_harian` MODIFY `qr_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -134,7 +129,7 @@ ALTER TABLE `konsentrasi_keahlian` ADD CONSTRAINT `fk_program` FOREIGN KEY (`pro
 ALTER TABLE `kelas` ADD CONSTRAINT `fk_wali_kelas` FOREIGN KEY (`wali_kelas_id`) REFERENCES `guru` (`guru_id`) ON DELETE SET NULL, ADD CONSTRAINT `fk_konsentrasi` FOREIGN KEY (`konsentrasi_id`) REFERENCES `konsentrasi_keahlian` (`konsentrasi_id`) ON DELETE SET NULL;
 ALTER TABLE `siswa` ADD CONSTRAINT `fk_user_siswa` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL, ADD CONSTRAINT `fk_kelas_siswa` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE SET NULL;
 ALTER TABLE `guru` ADD CONSTRAINT `fk_user_guru` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
-ALTER TABLE `jadwal_pelajaran` ADD CONSTRAINT `fk_kelas_jadwal` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE CASCADE, ADD CONSTRAINT `fk_mapel_jadwal` FOREIGN KEY (`mapel_id`) REFERENCES `mapel` (`mapel_id`) ON DELETE CASCADE, ADD CONSTRAINT `fk_guru_jadwal` FOREIGN KEY (`guru_id`) REFERENCES `guru` (`guru_id`) ON DELETE CASCADE;
+ALTER TABLE `jadwal_files` ADD CONSTRAINT `fk_kelas_jadwal` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE CASCADE;
 
 COMMIT;
 
