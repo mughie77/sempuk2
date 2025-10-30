@@ -88,7 +88,7 @@ if ($error === 'invalid') {
                 <?php echo $message; ?>
                 <form action="<?php echo BASE_URL; ?>core/login_process.php" method="POST">
                     <div class="mb-4">
-                        <label for="username" class="form-label">Username</label>
+                        <label for="username" class="form-label">Username / NISN Siswa</label>
                         <div class="input-group">
                              <span class="input-group-text"><i class="bi bi-person"></i></span>
                             <input type="text" class="form-control" id="username" name="username" required>
