@@ -5,7 +5,7 @@ require_once __DIR__ . '/auth_check.php';
 require_role(['Administrator']);
 require_once __DIR__ . '/../includes/lib/fpdf/fpdf.php';
 
-// Function to fetch all data for a single student
+// Function to fetch all data for a single student (no changes needed here)
 function get_student_details($mysqli, $siswa_id) {
     $data = [];
     $stmt = $mysqli->prepare("
@@ -24,7 +24,6 @@ function get_student_details($mysqli, $siswa_id) {
 
     if (!$data['siswa']) return null;
 
-    // Fetch other related data...
     $data['orang_tua'] = [];
     $stmt_ortu = $mysqli->prepare("SELECT * FROM orang_tua WHERE siswa_id = ?");
     $stmt_ortu->bind_param("i", $siswa_id);
@@ -62,6 +61,202 @@ function get_student_details($mysqli, $siswa_id) {
     return $data;
 }
 
+
+class PDF_Buku_Induk extends FPDF
+{
+    private $nomor_induk;
+    protected $y0;
+    protected $col = 0;
+
+    // Fixed layout coordinates and dimensions
+    private $page_margin = 10;
+    private $column_width = 130;
+    private $column_gutter = 17;
+    private $line_height = 5;
+    private $font_size = 9;
+
+    // Pre-calculated X positions for the grid layout
+    private $x_col_1; // Start of column 1
+    private $x_col_2; // Start of column 2
+    private $x_num_start;
+    private $x_label_start;
+    private $x_colon_start;
+    private $x_value_start;
+
+    function __construct($orientation='L', $unit='mm', $size='A4') {
+        parent::__construct($orientation, $unit, $size);
+        $this->SetMargins($this->page_margin, $this->page_margin);
+        $this->x_col_1 = $this->page_margin;
+        $this->x_col_2 = $this->page_margin + $this->column_width + $this->column_gutter;
+    }
+
+    function SetNomorInduk($nomor_induk) {
+        $this->nomor_induk = $nomor_induk;
+    }
+
+    function Header() {
+        $this->SetFont('Times', 'B', 12);
+        $this->Cell(0, 6, 'BUKU INDUK PESERTA DIDIK', 0, 1, 'C');
+        $this->SetFont('Times', '', 10);
+        $this->Cell(0, 5, 'TAHUN PELAJARAN: ' . date('Y') . '/' . (date('Y') + 1), 0, 1, 'C');
+        $this->Ln(2);
+
+        // Photo box and NIS box
+        $photo_box_width = 30; // 3cm
+        $photo_box_height = 40; // 4cm
+        $nis_box_width = 40;
+
+        $page_width = $this->GetPageWidth();
+        $photo_box_x = $page_width - $this->page_margin - $photo_box_width;
+        $nis_box_x = $photo_box_x - $nis_box_width - 5;
+        $box_y = $this->GetY();
+
+        // NIS Box
+        $this->SetFont('Times', 'B', 10);
+        $this->SetXY($nis_box_x, $box_y);
+        $this->Cell($nis_box_width, 6, 'NOMOR INDUK', 1, 2, 'C');
+        $this->SetX($nis_box_x);
+        $this->Cell($nis_box_width, 10, $this->nomor_induk, 1, 1, 'C');
+
+        // Photo Box
+        $this->Rect($photo_box_x, $box_y, $photo_box_width, $photo_box_height);
+        $this->SetXY($photo_box_x, $box_y + ($photo_box_height/2) - 5);
+        $this->SetFont('Times', 'I', 8);
+        $this->MultiCell($photo_box_width, 5, 'Tempel Pas Foto 3x4', 0, 'C');
+
+        $this->y0 = $box_y + $photo_box_height + 5; // Set start Y for content below boxes
+        $this->SetY($this->y0);
+    }
+
+    function SetCol($col) {
+        $this->col = $col;
+        $x_start = ($col == 0) ? $this->x_col_1 : $this->x_col_2;
+        $this->SetLeftMargin($x_start);
+        $this->SetX($x_start);
+
+        // Define grid X positions for the current column
+        $this->x_num_start = $x_start;
+        $this->x_label_start = $this->x_num_start + 6;
+        $this->x_colon_start = $this->x_label_start + 55;
+        $this->x_value_start = $this->x_colon_start + 3;
+    }
+
+    function AcceptPageBreak() {
+        if ($this->col == 0) {
+            $this->SetCol(1);
+            $this->SetY($this->y0);
+            return false;
+        } else {
+            $this->SetCol(0);
+            return true;
+        }
+    }
+
+    function ChapterTitle($num, $label) {
+        $full_width = $this->GetPageWidth() - (2 * $this->page_margin);
+        $this->SetX($this->page_margin);
+        $this->SetFont('Times', 'B', $this->font_size);
+        $this->SetFillColor(220, 220, 220);
+        $this->Cell(8, 6, $num, 1, 0, 'C', true);
+        $this->Cell($full_width - 8, 6, $label, 1, 1, 'L', true);
+        $this->Ln(2);
+    }
+
+    function ContentRow($num, $label, $value, $sub_item = false) {
+        $this->SetFont('Times', '', $this->font_size);
+        $y_before = $this->GetY();
+
+        // 1. Number
+        $this->SetX($this->x_num_start);
+        $this->Cell(5, $this->line_height, $num, 0, 0, 'R');
+
+        // 2. Label
+        $this->SetX($sub_item ? $this->x_label_start + 5 : $this->x_label_start);
+        $this->Cell(55, $this->line_height, $label, 0, 0, 'L');
+
+        // 3. Colon
+        $this->SetX($this->x_colon_start);
+        $this->Cell(3, $this->line_height, ':', 0, 0, 'C');
+
+        // 4. Value
+        $this->SetX($this->x_value_start);
+        $value_width = $this->column_width - ($this->x_value_start - $this->GetX());
+        $this->MultiCell($value_width, $this->line_height, $value ?? '', 0, 'L');
+
+        // Reset Y position to ensure next row starts correctly
+        $y_after = $this->GetY();
+        $height_of_multicell = $y_after - $y_before;
+        if ($height_of_multicell < $this->line_height) {
+             $this->SetY($y_before + $this->line_height);
+        }
+        $this->Ln(1); // Small gap between rows
+    }
+
+    function PrintStudentData($data) {
+        $s = $data['siswa'] ?? [];
+        $pend = $data['pendidikan'] ?? [];
+        $ayah = $data['orang_tua']['Ayah'] ?? [];
+        $ibu = $data['orang_tua']['Ibu'] ?? [];
+        $wali = $data['orang_tua']['Wali'] ?? [];
+        $keg = $data['kegemaran'] ?? [];
+        $perk = $data['perkembangan'] ?? [];
+        $lulus = $data['lulus'] ?? [];
+
+        $this->ChapterTitle('A.', 'KETERANGAN PRIBADI SISWA');
+
+        // Column 1
+        $this->SetCol(0);
+        $this->ContentRow('1.', 'Nama Lengkap Peserta Didik', $s['nama_lengkap']);
+        $this->ContentRow('2.', 'Nama Panggilan', $s['nama_panggilan']);
+        $this->ContentRow('3.', 'Jenis Kelamin', ($s['jk'] == 'L' ? 'Laki-laki' : 'Perempuan'));
+        $this->ContentRow('4.', 'Tempat dan Tanggal Lahir', $s['tempat_lahir'] . ', ' . ($s['tanggal_lahir'] ? date('d-m-Y', strtotime($s['tanggal_lahir'])) : ''));
+        $this->ContentRow('5.', 'Agama', $s['agama']);
+        $this->ContentRow('6.', 'Kewarganegaraan', $s['kewarganegaraan']);
+        $this->ContentRow('7.', 'Anak ke-', $s['anak_ke']);
+        $this->ContentRow('8.', 'Jumlah Saudara Kandung', $s['jml_saudara_kandung']);
+        $this->ContentRow('9.', 'Bahasa Sehari-hari', $s['bahasa_sehari_hari']);
+        $this->ContentRow('10.', 'Alamat Peserta Didik', $s['alamat']);
+        $this->ContentRow('11.', 'Nomor Telepon/HP', $s['telepon']);
+        $this->ContentRow('12.', 'Tinggal Dengan', $s['tinggal_dengan']);
+        $this->ContentRow('13.', 'Jarak ke Sekolah', $s['jarak_ke_sekolah']);
+        $this->ContentRow('14.', 'Golongan Darah', $s['golongan_darah']);
+        $this->ContentRow('15.', 'Penyakit yang Pernah Diderita', $s['penyakit_diderita']);
+        $this->ContentRow('16.', 'Kelainan Jasmani', $s['kelainan_jasmani']);
+        $this->ContentRow('17.', 'Tinggi dan Berat Badan', $s['tinggi_badan'] . ' cm / ' . $s['berat_badan'] . ' kg');
+
+        // Column 2
+        $this->SetCol(1);
+        $this->SetY($this->y0 + 8); // +8 to align with Chapter title
+        $this->ContentRow('18.', 'Pendidikan Sebelumnya', '');
+        $this->ContentRow('', 'a. Lulusan dari', $pend['nama_sekolah'], true);
+        $this->ContentRow('', 'b. Tgl & No. Ijazah', $pend['tahun_sttb'] . ' / ' . $pend['nomor_sttb'], true);
+        $this->ContentRow('19.', 'Orang Tua Kandung', '');
+        $this->ContentRow('', 'a. Nama Ayah', $ayah['nama_lengkap'], true);
+        $this->ContentRow('', 'b. Nama Ibu', $ibu['nama_lengkap'], true);
+        $this->ContentRow('', 'c. Alamat', $ayah['alamat'], true);
+        $this->ContentRow('', 'd. Pekerjaan Ayah', $ayah['pekerjaan'], true);
+        $this->ContentRow('', 'e. Pekerjaan Ibu', $ibu['pekerjaan'], true);
+        $this->ContentRow('20.', 'Wali Peserta Didik', '');
+        $this->ContentRow('', 'a. Nama Wali', $wali['nama_lengkap'], true);
+        $this->ContentRow('', 'b. Pekerjaan', $wali['pekerjaan'], true);
+        $this->ContentRow('', 'c. Alamat', $wali['alamat'], true);
+
+        $this->ChapterTitle('B.', 'PERKEMBANGAN SISWA');
+        $this->SetCol(0);
+        $this->ContentRow('1.', 'Beasiswa', ($perk['beasiswa_nama'] ?? '') . ' thn ' . ($perk['beasiswa_tahun'] ?? ''));
+        $this->ContentRow('2.', 'Meninggalkan Sekolah', '');
+        $this->ContentRow('', 'a. Tanggal', $perk['meninggalkan_sekolah_tanggal'], true);
+        $this->ContentRow('', 'b. Alasan', $perk['meninggalkan_sekolah_alasan'], true);
+        $this->SetCol(1);
+        $this->SetY($this->GetY() - 18); // Align with column 1
+        $this->ContentRow('3.', 'Akhir Pendidikan', '');
+        $this->ContentRow('', 'a. Lulus Tanggal', $perk['akhir_pendidikan_tanggal'], true);
+        $this->ContentRow('', 'b. No Ijazah', $perk['akhir_pendidikan_no_ijazah'], true);
+
+    }
+}
+
+// Main script execution
 $siswa_ids = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['siswa_ids'])) {
     $siswa_ids = (array)$_POST['siswa_ids'];
@@ -73,206 +268,13 @@ if (empty($siswa_ids)) {
     die("Tidak ada siswa yang dipilih.");
 }
 
-class PDF extends FPDF
-{
-    private $nomor_induk;
-    protected $y0;
-
-    function SetNomorInduk($nomor_induk) {
-        $this->nomor_induk = $nomor_induk;
-    }
-
-    function Header() {
-        // Arial bold 12
-        $this->SetFont('Times', 'B', 12);
-        // Judul
-        $this->Cell(0, 6, 'BUKU INDUK PESERTA DIDIK', 0, 1, 'C');
-        $this->SetFont('Times', '', 10);
-        $this->Cell(0, 5, 'TAHUN PELAJARAN: ' . date('Y') . '/' . (date('Y') + 1), 0, 1, 'C');
-        $this->Ln(5);
-
-        // Nomor Induk Box
-        $this->SetFont('Times', 'B', 10);
-        $this->Cell(237, 6, '', 0, 0, 'L'); // Spacer
-        $this->Cell(40, 6, 'NOMOR INDUK', 1, 1, 'C');
-        $this->Cell(237, 6, '', 0, 0, 'L'); // Spacer
-        $this->Cell(40, 6, $this->nomor_induk, 1, 1, 'C');
-
-        // Set y0 for columns
-        $this->y0 = $this->GetY();
-    }
-
-    function Footer() {
-        $this->SetY(-15);
-        $this->SetFont('Times', 'I', 8);
-        $this->Cell(0, 10, 'Halaman ' . $this->PageNo() . '/{nb}', 0, 0, 'C');
-    }
-
-    function SetCol($col) {
-        // Set position at a given column
-        $this->col = $col;
-        $x = 10 + $col * 140; // 10mm margin, 140mm column width
-        $this->SetLeftMargin($x);
-        $this->SetX($x);
-    }
-
-    function AcceptPageBreak() {
-        // Method automatically called when page break occurs
-        if ($this->col < 1) { // We're in the first column
-            $this->SetCol(1); // Go to next column
-            $this->SetY($this->y0); // Set Y to the top of the column
-            return false; // Suppress page break
-        } else { // We're in the second column
-            $this->SetCol(0); // Go back to first column
-            return true; // Perform page break
-        }
-    }
-
-    function ChapterTitle($num, $label) {
-        $this->SetFont('Times', 'B', 10);
-        $this->SetFillColor(200, 220, 255);
-        $this->SetX(10); // Start from left margin
-        $this->Cell(10, 6, $num, 1, 0, 'C', true);
-        // Full width for landscape A4 (297mm) minus margins (20mm) = 277mm.
-        $this->Cell(267, 6, $label, 1, 1, 'L', true);
-        $this->Ln(2);
-    }
-
-    function ContentRow($num, $label, $value, $indent = false) {
-        $this->SetFont('Times', '', 9);
-        $this->Cell(8, 5, $num, 0, 0, 'R');
-        $this->SetFont('Times', '', 9);
-        $x = $this->GetX();
-        $this->SetX($x + ($indent ? 5 : 0));
-
-        // Calculate width for label and value
-        $current_col_width = 135; // Approx column width
-        $label_width = 50;
-        $value_width = $current_col_width - $label_width - 10; // 10 for num and ':'
-
-        $this->Cell($label_width, 5, $label, 0, 0, 'L');
-        $this->Cell(3, 5, ':', 0, 0, 'C');
-
-        $y = $this->GetY();
-        $x = $this->GetX();
-        $this->MultiCell($value_width, 5, $value, 0, 'L');
-        // Ensure the Y position is consistent after MultiCell
-        if ($this->GetY() > $y + 5) {
-             // MultiCell created more than one line
-        } else {
-            $this->SetXY($x + $value_width, $y); // Move to the right of the value
-        }
-        $this->Ln(2); // Spacing after the row
-    }
-
-    function PrintStudentData($data) {
-        $s = $data['siswa'];
-        $pend = $data['pendidikan'];
-        $ayah = $data['orang_tua']['Ayah'] ?? [];
-        $ibu = $data['orang_tua']['Ibu'] ?? [];
-        $wali = $data['orang_tua']['Wali'] ?? [];
-        $keg = $data['kegemaran'];
-        $perk = $data['perkembangan'];
-        $lulus = $data['lulus'];
-
-        // Start in the first column
-        $this->SetCol(0);
-
-        // A. KETERANGAN PRIBADI SISWA
-        $this->ChapterTitle('A.', 'KETERANGAN PRIBADI SISWA');
-        $this->SetCol(0);
-        $this->ContentRow('1.', 'Nama Lengkap', $s['nama_lengkap'] ?? '');
-        $this->ContentRow('2.', 'Nama Panggilan', $s['nama_panggilan'] ?? '');
-        $this->ContentRow('3.', 'Jenis Kelamin', ($s['jk'] ?? '') == 'L' ? 'Laki-laki' : 'Perempuan');
-        $this->ContentRow('4.', 'Tempat & Tgl Lahir', ($s['tempat_lahir'] ?? '') . ', ' . ($s['tanggal_lahir'] ?? ''));
-        $this->ContentRow('5.', 'Agama', $s['agama'] ?? '');
-        $this->ContentRow('6.', 'Kewarganegaraan', $s['kewarganegaraan'] ?? '');
-        $this->ContentRow('7.', 'Anak ke-', $s['anak_ke'] ?? '');
-        $this->ContentRow('8.', 'Jml Sdr Kandung', $s['jml_saudara_kandung'] ?? '');
-        $this->ContentRow('9.', 'Bahasa Sehari-hari', $s['bahasa_sehari_hari'] ?? '');
-        $this->Ln(2);
-
-        // B. KETERANGAN TEMPAT TINGGAL
-        $this->ChapterTitle('B.', 'KETERANGAN TEMPAT TINGGAL');
-        $this->SetCol(0);
-        $this->ContentRow('10.', 'Alamat', $s['alamat'] ?? '');
-        $this->ContentRow('11.', 'No. Telepon/HP', $s['telepon'] ?? '');
-        $this->ContentRow('12.', 'Tinggal Dengan', $s['tinggal_dengan'] ?? '');
-        $this->ContentRow('13.', 'Jarak ke Sekolah', $s['jarak_ke_sekolah'] ?? '');
-        $this->Ln(2);
-
-        // C. KETERANGAN KESEHATAN
-        $this->ChapterTitle('C.', 'KETERANGAN KESEHATAN');
-        $this->SetCol(0);
-        $this->ContentRow('14.', 'Golongan Darah', $s['golongan_darah'] ?? '');
-        $this->ContentRow('15.', 'Penyakit yg Diderita', $s['penyakit_diderita'] ?? '');
-        $this->ContentRow('16.', 'Kelainan Jasmani', $s['kelainan_jasmani'] ?? '');
-        $this->ContentRow('17.', 'Tinggi/Berat Badan', ($s['tinggi_badan'] ?? '') . ' cm / ' . ($s['berat_badan'] ?? '') . ' kg');
-        $this->Ln(2);
-
-        // D. KETERANGAN PENDIDIKAN SEBELUMNYA
-        $this->ChapterTitle('D.', 'KETERANGAN PENDIDIKAN SEBELUMNYA');
-        $this->SetCol(0);
-        $this->ContentRow('18.', 'Lulusan Dari', $pend['nama_sekolah'] ?? '');
-        $this->ContentRow('', 'Tgl/No. STTB', ($pend['tahun_sttb'] ?? '') . ' / ' . ($pend['nomor_sttb'] ?? ''));
-        $this->Ln(2);
-
-        // Move to the second column
-        $this->SetCol(1);
-        $this->SetY($this->y0); // Reset Y to top
-
-        // E. KETERANGAN ORANG TUA KANDUNG
-        $this->ChapterTitle('E.', 'KETERANGAN ORANG TUA KANDUNG');
-        $this->SetCol(1);
-        $this->ContentRow('19.', 'Nama Ayah', $ayah['nama_lengkap'] ?? '');
-        $this->ContentRow('', 'Pekerjaan', $ayah['pekerjaan'] ?? '');
-        $this->ContentRow('', 'Alamat', $ayah['alamat'] ?? '');
-        $this->ContentRow('20.', 'Nama Ibu', $ibu['nama_lengkap'] ?? '');
-        $this->ContentRow('', 'Pekerjaan', $ibu['pekerjaan'] ?? '');
-        $this->ContentRow('', 'Alamat', $ibu['alamat'] ?? '');
-        $this->Ln(2);
-
-        // F. KETERANGAN WALI
-        $this->ChapterTitle('F.', 'KETERANGAN WALI');
-        $this->SetCol(1);
-        $this->ContentRow('21.', 'Nama Wali', $wali['nama_lengkap'] ?? '');
-        $this->ContentRow('22.', 'Pekerjaan', $wali['pekerjaan'] ?? '');
-        $this->ContentRow('23.', 'Alamat', $wali['alamat'] ?? '');
-        $this->Ln(2);
-
-        // G. KEGEMARAN SISWA
-        $this->ChapterTitle('G.', 'KEGEMARAN SISWA');
-        $this->SetCol(1);
-        $this->ContentRow('24.', 'Kesenian', $keg['kesenian'] ?? '');
-        $this->ContentRow('25.', 'Olah Raga', $keg['olahraga'] ?? '');
-        $this->ContentRow('26.', 'Organisasi', $keg['kemasyarakatan'] ?? '');
-        $this->ContentRow('27.', 'Lain-lain', $keg['lain_lain'] ?? '');
-        $this->Ln(2);
-
-        // H. PERKEMBANGAN SISWA
-        $this->ChapterTitle('H.', 'PERKEMBANGAN SISWA');
-        $this->SetCol(1);
-        $this->ContentRow('28.', 'Beasiswa', ($perk['beasiswa_nama'] ?? '') . ' thn ' . ($perk['beasiswa_tahun'] ?? ''));
-        $this->ContentRow('29.', 'Meninggalkan Sekolah', ($perk['meninggalkan_sekolah_tanggal'] ?? '') . ' (' . ($perk['meninggalkan_sekolah_alasan'] ?? '') . ')');
-        $this->ContentRow('30.', 'Akhir Pendidikan', ($perk['akhir_pendidikan_tanggal'] ?? '') . ' / ' . ($perk['akhir_pendidikan_no_ijazah'] ?? ''));
-        $this->Ln(2);
-
-        // I. SETELAH SELESAI PENDIDIKAN
-        $this->ChapterTitle('I.', 'SETELAH SELESAI PENDIDIKAN');
-        $this->SetCol(1);
-        $this->ContentRow('31.', 'Melanjutkan ke', $lulus['melanjutkan_ke'] ?? '');
-        $this->ContentRow('32.', 'Bekerja', 'Tgl: ' . ($lulus['bekerja_tanggal_mulai'] ?? '') . ', di: ' . ($lulus['bekerja_nama_perusahaan'] ?? '') . ', Gaji: ' . ($lulus['bekerja_penghasilan'] ?? ''));
-    }
-}
-
-$pdf = new PDF('L', 'mm', 'A4');
+$pdf = new PDF_Buku_Induk('L', 'mm', 'A4');
 $pdf->AliasNbPages();
 
 foreach ($siswa_ids as $siswa_id) {
     $data = get_student_details($mysqli, $siswa_id);
     if ($data) {
-        $s = $data['siswa'];
-        $pdf->SetNomorInduk($s['nis'] ?? '');
+        $pdf->SetNomorInduk($data['siswa']['nis'] ?? '');
         $pdf->AddPage();
         $pdf->PrintStudentData($data);
     }
