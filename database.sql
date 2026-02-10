@@ -321,6 +321,56 @@ CREATE TABLE `tabungan_transaksi` (
   `tanggal_transaksi` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `kegemaran_siswa`
+--
+
+CREATE TABLE `kegemaran_siswa` (
+  `kegemaran_id` int(11) NOT NULL,
+  `siswa_id` int(11) NOT NULL,
+  `kesenian` varchar(255) DEFAULT NULL,
+  `olahraga` varchar(255) DEFAULT NULL,
+  `kemasyarakatan` varchar(255) DEFAULT NULL,
+  `lain_lain` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `perkembangan_siswa`
+--
+
+CREATE TABLE `perkembangan_siswa` (
+  `perkembangan_id` int(11) NOT NULL,
+  `siswa_id` int(11) NOT NULL,
+  `beasiswa_nama` varchar(100) DEFAULT NULL,
+  `beasiswa_tahun` varchar(10) DEFAULT NULL,
+  `beasiswa_dari` varchar(100) DEFAULT NULL,
+  `meninggalkan_sekolah_tanggal` date DEFAULT NULL,
+  `meninggalkan_sekolah_alasan` varchar(255) DEFAULT NULL,
+  `akhir_pendidikan_tanggal` date DEFAULT NULL,
+  `akhir_pendidikan_no_ijazah` varchar(100) DEFAULT NULL,
+  `akhir_pendidikan_no_skhun` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `info_setelah_lulus`
+--
+
+CREATE TABLE `info_setelah_lulus` (
+  `info_lulus_id` int(11) NOT NULL,
+  `siswa_id` int(11) NOT NULL,
+  `melanjutkan_ke` varchar(100) DEFAULT NULL,
+  `bekerja_di` varchar(100) DEFAULT NULL,
+  `bekerja_tanggal_mulai` date DEFAULT NULL,
+  `bekerja_nama_perusahaan` varchar(100) DEFAULT NULL,
+  `bekerja_penghasilan` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 --
 -- Indexes for dumped tables
 --
@@ -344,6 +394,9 @@ ALTER TABLE `laporan_perundungan` ADD PRIMARY KEY (`laporan_id`), ADD KEY `pelap
 ALTER TABLE `poin_pelanggaran` ADD PRIMARY KEY (`poin_id`), ADD KEY `siswa_id` (`siswa_id`), ADD KEY `guru_pencatat_id` (`guru_pencatat_id`);
 ALTER TABLE `tabungan_saldo` ADD PRIMARY KEY (`saldo_id`), ADD UNIQUE KEY `siswa_id` (`siswa_id`);
 ALTER TABLE `tabungan_transaksi` ADD PRIMARY KEY (`transaksi_id`), ADD KEY `siswa_id` (`siswa_id`), ADD KEY `petugas_user_id` (`petugas_user_id`);
+ALTER TABLE `kegemaran_siswa` ADD PRIMARY KEY (`kegemaran_id`), ADD UNIQUE KEY `siswa_id` (`siswa_id`);
+ALTER TABLE `perkembangan_siswa` ADD PRIMARY KEY (`perkembangan_id`), ADD UNIQUE KEY `siswa_id` (`siswa_id`);
+ALTER TABLE `info_setelah_lulus` ADD PRIMARY KEY (`info_lulus_id`), ADD UNIQUE KEY `siswa_id` (`siswa_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -368,6 +421,9 @@ ALTER TABLE `laporan_perundungan` MODIFY `laporan_id` int(11) NOT NULL AUTO_INCR
 ALTER TABLE `poin_pelanggaran` MODIFY `poin_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `tabungan_saldo` MODIFY `saldo_id` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `tabungan_transaksi` MODIFY `transaksi_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `kegemaran_siswa` MODIFY `kegemaran_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `perkembangan_siswa` MODIFY `perkembangan_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `info_setelah_lulus` MODIFY `info_lulus_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
@@ -388,5 +444,8 @@ ALTER TABLE `laporan_perundungan` ADD CONSTRAINT `laporan_perundungan_ibfk_1` FO
 ALTER TABLE `poin_pelanggaran` ADD CONSTRAINT `poin_pelanggaran_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE, ADD CONSTRAINT `poin_pelanggaran_ibfk_2` FOREIGN KEY (`guru_pencatat_id`) REFERENCES `guru` (`guru_id`) ON DELETE CASCADE;
 ALTER TABLE `tabungan_saldo` ADD CONSTRAINT `tabungan_saldo_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
 ALTER TABLE `tabungan_transaksi` ADD CONSTRAINT `tabungan_transaksi_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE, ADD CONSTRAINT `tabungan_transaksi_ibfk_2` FOREIGN KEY (`petugas_user_id`) REFERENCES `users` (`user_id`);
+ALTER TABLE `kegemaran_siswa` ADD CONSTRAINT `kegemaran_siswa_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
+ALTER TABLE `perkembangan_siswa` ADD CONSTRAINT `perkembangan_siswa_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
+ALTER TABLE `info_setelah_lulus` ADD CONSTRAINT `info_setelah_lulus_ibfk_1` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE CASCADE;
 
 COMMIT;
